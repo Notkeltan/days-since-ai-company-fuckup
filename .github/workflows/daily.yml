@@ -1,0 +1,49 @@
+name: daily counter post
+
+on:
+  schedule:
+    - cron: "0 22 * * *"        # 22:00 UTC = 08:00 AEST / 09:00 AEDT (Newcastle morning)
+  push:
+    paths: ["incidents.yaml"]   # adding an incident → immediate reset post
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "dry run (no posting)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write               # to commit state.json back
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - name: post
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
+          COUNTER_HANDLE: ${{ vars.COUNTER_HANDLE }}
+          COUNTER_CENSOR: ${{ vars.COUNTER_CENSOR }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python post.py --dry-run
+          else
+            # on a push (new incident) force so the reset goes out even if the daily already ran
+            if [ "${{ github.event_name }}" = "push" ]; then python post.py --force; else python post.py; fi
+          fi
+      - name: commit state
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name "counter-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add state.json out/*.png || true
+          git diff --cached --quiet || git commit -m "state: $(date -u +%F)" && git push
