@@ -113,9 +113,12 @@ Left, all needing you:
 - [ ] X profile: display name, bio, avatar (`out/avatar.png`), header (`out/header.png`), and decide whether the handle stays @xRiskMemes.
 - [ ] Pin a rules post linking the repo's README.
 
+## Adding an incident from your phone
+
+Open the repo in the GitHub app → Issues → New issue → **Log an incident**. Fill the form, submit. A workflow parses it into `incidents.yaml`, commits, closes the issue with the entry it wrote, and triggers a post run — so a Tier 1 entry becomes a reset post within a couple of minutes. Only issues opened by the repo owner are processed. If the parse fails (bad date, missing field) the bot comments on the issue and does nothing.
+
 ## Roadmap ideas
 
-- **Add incidents from your phone.** A Siri Shortcut that takes dictated text, has the on-device model draft the YAML entry, and commits it via the GitHub Contents API. Fits your existing capture setup; a reset from the couch.
 - **Auto-detection with a human gate.** Weekly Action: Claude reads a handful of AI-news RSS feeds against the rubric and opens a PR proposing entries. You merge or close. Never let it post unsupervised — the credibility argument above.
 - **Monthly league table.** "Resets this year by lab" as a second image. Engagement bait, but honest engagement bait.
 - **Milestones.** 7 / 30 / 100 days get a small flourish ("a whole month. Somebody check on them.")

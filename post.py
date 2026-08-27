@@ -275,7 +275,7 @@ def main() -> None:
     if record is not None:
         rs = max(done, key=lambda s: s[0])
         record_from = f"{rs[1].date.isoformat()} → {rs[2].date.isoformat()}"
-    days = (today - latest.date).days
+    days = max(0, (today - latest.date).days)  # future-dated entries count as day 0
     is_new_record = record is not None and days > record and not state.get("record_announced_for") == latest.id
 
     OUT.mkdir(exist_ok=True)
