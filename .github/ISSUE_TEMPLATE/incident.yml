@@ -1,0 +1,71 @@
+name: Log an incident
+description: Add an entry to incidents.yaml from your phone. Tier 1 resets the counter and posts within minutes.
+title: "[incident] "
+labels: ["incident"]
+body:
+  - type: input
+    id: date
+    attributes:
+      label: Date
+      description: yyyy-mm-dd — the day it became public, not the day it happened.
+      placeholder: "2026-08-25"
+    validations:
+      required: true
+  - type: dropdown
+    id: lab
+    attributes:
+      label: Lab
+      options: [OpenAI, Anthropic, Google DeepMind, Meta, xAI, Microsoft, DeepSeek, Mistral, Amazon, Alibaba/Qwen]
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Tier
+      description: 1 resets the counter. 2 is logged as an honourable mention.
+      options: ["1", "2"]
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options: [model_behaviour, security_privacy, governance, deception, safety_process, misuse, legal]
+    validations:
+      required: true
+  - type: dropdown
+    id: tone
+    attributes:
+      label: Tone
+      description: somber for anything involving a death, a child, or abuse victims — drops the jokes.
+      options: [snark, somber]
+      default: 0
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      description: One line, under 120 characters. This is what the sign and the post say.
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: Detail
+      description: One sentence of context for the reply thread.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source URL
+      description: A primary source. Costs $0.20 to post because it's a link, so make it a good one.
+    validations:
+      required: true
+  - type: dropdown
+    id: confidence
+    attributes:
+      label: Confidence
+      options: [high, medium, low]
+      default: 0
