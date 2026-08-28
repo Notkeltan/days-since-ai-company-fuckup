@@ -83,7 +83,7 @@ jobs:
         if: steps.commit.outputs.appended == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run daily.yml -f dry_run=false
+        run: gh workflow run daily.yml -f dry_run=false -f on_new=true
 
       - name: open a review issue for anything held back
         if: github.event.inputs.dry_run != 'true'

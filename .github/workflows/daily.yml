@@ -16,6 +16,10 @@ on:
         description: "dry run (no posting)"
         type: boolean
         default: false
+      on_new:
+        description: "only post if incidents.yaml gained something, and override the once-a-day guard"
+        type: boolean
+        default: false
 
 permissions:
   contents: write               # to commit state.json back
@@ -46,9 +50,15 @@ jobs:
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             python post.py --dry-run
           else
-            # on a push, post only if incidents.yaml gained something, but do post
-            # even if the daily already went out today
-            if [ "${{ github.event_name }}" = "push" ]; then python post.py --on-new; else python post.py; fi
+            # A push, or a dispatch from the detector, means incidents.yaml may have
+            # gained something: post only if it did, but do post even if today's
+            # count already went out. Without this a reset found after the daily
+            # post is silently swallowed by the once-a-day guard.
+            if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event.inputs.on_new }}" = "true" ]; then
+              python post.py --on-new
+            else
+              python post.py
+            fi
           fi
       - name: commit state
         if: github.event.inputs.dry_run != 'true'
