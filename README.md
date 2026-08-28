@@ -41,7 +41,7 @@ The account says "company", never "lab". The word does quiet work for them: labo
 
 **Also not counted:** capability announcements, benchmarks, executive departures without a stated safety reason, and anything without a primary source.
 
-**The date** is when it became public, not when it happened. The counter measures what the world could see.
+**The date** is the incident's *first public disclosure* — the earliest moment it was visible to anyone outside the company. Not when it happened, and not when the press picked it up: if a researcher posts it on the 3rd and the coverage lands on the 6th, the date is the 3rd. Something a company disclosed in November but detected in September is dated November. The counter measures what the world could see, so it cannot start before anyone could see it.
 
 ## Mechanics
 
@@ -132,6 +132,58 @@ Scheduling note: GitHub delays and sometimes drops cron runs - the first
 scheduled post landed five hours late and the second never fired at all. There
 are now four crons through the local morning; `post.py`'s once-a-day guard
 makes all but the first a no-op.
+
+## The detector
+
+`detect.py` is the autonomous half. Once a day, half an hour before the post, it
+asks Claude Opus 5 - max reasoning effort, web search and web fetch - to sweep
+for anything a frontier AI company has had to apologise for, then applies the
+evidence bar in Python and appends what clears it.
+
+**The model recommends; `qualifies()` decides.** That split is the whole safety
+design. The brief tells the model to work like a desk editor rather than a
+headline reader - company newsrooms, regulators, security researchers, technical
+press, and the practitioner communities where problems surface first - and to
+treat agreement between *independent kinds* of source as what makes a story
+real. Two mastheads rewriting one wire story is one source. But none of that is
+trusted on its word. A finding only reaches `incidents.yaml` if, checked in code:
+
+- the model recommended posting, at `high` confidence
+- the story is `corroborated` or `acknowledged`, not an allegation or a single report
+- at least **2 independent sources**, at least one of them **primary** - the
+  company itself, a regulator, a court or agency document, or the researcher
+  who found it
+- the company is on the frontier list, and it isn't a lawsuit reset
+- first disclosure is within 30 days, not in the future, and not already logged
+
+Everything else becomes a `needs-review` issue with the model's own reasoning
+and what it says would confirm the story. A persuasive finding cannot talk its
+way onto the account; it can only talk its way into your inbox.
+
+Set `DETECTOR_MODE=review` to route *everything* to review and post nothing
+automatically - the same detector, with a human in the loop.
+
+**A missed sweep heals itself.** The lookback window is 14 days, so a sweep that
+GitHub drops costs at most a day's delay: tomorrow's sweep still finds the
+incident and still dates it to first disclosure. That's why there is one cron
+here and four on the post - a repeated sweep costs real money, a repeated post
+costs nothing.
+
+Config, all optional repo variables: `DETECTOR_MODE` (`auto`), `DETECTOR_EFFORT`
+(`max`), `DETECTOR_LOOKBACK` (`14`). Requires the `ANTHROPIC_API_KEY` secret.
+
+Testing without spending anything: `python detect.py --replay findings.json
+--dry-run` runs the whole decision path over a saved response. Each real sweep's
+full response is kept as a workflow artifact for 90 days, so a sweep that gets
+it wrong can be replayed and the bar tuned against it.
+
+**Cost.** This is the expensive part of the account by two orders of magnitude.
+Opus 5 at `max` effort with a heavy search sweep is roughly **$1.50-3.50 a day**,
+call it **$45-105 a month**, against about $0.60 a month for the posting itself -
+and that estimate excludes per-search charges for the web search tool, which you
+should check. Watch the first week in the Anthropic console and set a spend limit
+there. `DETECTOR_EFFORT=high` is materially cheaper if it turns out max effort
+isn't buying much; the artifacts make that comparison possible.
 
 ## Adding an incident from your phone
 

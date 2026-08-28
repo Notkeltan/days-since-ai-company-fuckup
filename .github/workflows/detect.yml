@@ -1,0 +1,109 @@
+name: detect incidents
+
+# Autonomous daily sweep. detect.py asks Claude Opus 5 to look for anything a
+# frontier AI company has had to apologise for, then applies the evidence bar in
+# Python. Findings that clear it are appended to incidents.yaml and the poster is
+# dispatched; everything else becomes a review issue.
+#
+# Runs before the daily post so a same-day reset goes out in place of the count.
+# A GITHUB_TOKEN push does not fire daily.yml's push trigger, hence the explicit
+# dispatch.
+
+on:
+  schedule:
+    - cron: "30 21 * * *"       # 07:30 AEST, half an hour before the daily post
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "research and report, but change nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: incidents            # never let a sweep and a post race on incidents.yaml
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+
+      - name: sweep
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DETECTOR_MODE: ${{ vars.DETECTOR_MODE }}
+          DETECTOR_EFFORT: ${{ vars.DETECTOR_EFFORT }}
+          DETECTOR_LOOKBACK: ${{ vars.DETECTOR_LOOKBACK }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python detect.py --dry-run | tee /tmp/sweep.txt
+          else
+            python detect.py | tee /tmp/sweep.txt
+          fi
+
+      # The full model response, kept for auditing a sweep that got it wrong.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: detection-${{ github.run_id }}
+          path: out/detection.json
+          if-no-files-found: ignore
+          retention-days: 90
+
+      - name: commit and post
+        id: commit
+        if: github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name "counter-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add incidents.yaml
+          if git diff --cached --quiet; then
+            echo "nothing accepted"
+          else
+            git commit -m "detect: $(date -u +%F)"
+            git pull --rebase --autostash
+            git push
+            echo "appended=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: dispatch the poster
+        if: steps.commit.outputs.appended == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run daily.yml -f dry_run=false
+
+      - name: open a review issue for anything held back
+        if: github.event.inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          count=$(python -c "import json;print(len(json.load(open('out/review.json'))))" 2>/dev/null || echo 0)
+          [ "$count" = "0" ] && { echo "nothing held"; exit 0; }
+          {
+            echo "The sweep found $count thing(s) it could not stand up on its own. Nothing has been posted."
+            echo
+            echo "Check them, and if one is real, log it through the incident form."
+            echo
+            echo '```'
+            sed -n '/^\[HOLD/,$p' /tmp/sweep.txt
+            echo '```'
+          } > /tmp/review.md
+          gh issue create --title "review: $count held finding(s) $(date -u +%F)" \
+                          --label needs-review --body-file /tmp/review.md
+
+      - name: report a failed sweep
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "detector failed $(date -u +%F)" --label needs-review \
+            --body "The sweep errored: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} . The counter still posts; it just is not watching until this is fixed."

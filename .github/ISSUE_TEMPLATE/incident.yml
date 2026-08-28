@@ -7,7 +7,7 @@ body:
     id: date
     attributes:
       label: Date
-      description: yyyy-mm-dd — the day it became public, not the day it happened.
+      description: yyyy-mm-dd — first public disclosure. The day it first surfaced anywhere, not the day it happened and not the day the press picked it up.
       placeholder: "2026-08-25"
     validations:
       required: true
