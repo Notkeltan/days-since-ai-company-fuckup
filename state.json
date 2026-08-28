@@ -1,5 +1,5 @@
 {
-  "last_incident_id": "anthropic-eval-unauthorized-access",
+  "last_incident_id": "openai-openai-postmortem-700-of-its-agents",
   "last_post_date": "2026-08-28",
   "known_ids": [
     "anthropic-books-settlement",
@@ -35,8 +35,13 @@
     "openai-hugging-face-breakout",
     "openai-mixpanel-breach",
     "openai-nda-clawback",
+    "openai-openai-postmortem-700-of-its-agents",
     "openai-sky-voice",
     "openai-superalignment-collapse",
     "raine-v-openai"
-  ]
+  ],
+  "resets_seen": [
+    "openai-openai-postmortem-700-of-its-agents"
+  ],
+  "record_announced_for": null
 }

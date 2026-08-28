@@ -149,7 +149,12 @@ def reset_text(inc: Incident, streak: int, record: int | None, days_now: int) ->
 
 
 def reply_text(inc: Incident) -> str:
-    parts = [p for p in (inc.detail, f"Source: {inc.source}" if inc.source else "") if p]
+    # One link, not all of them. The detector records every source it used in
+    # incidents.yaml, but a post carrying four URLs is spam-shaped - X returned
+    # 403 "not permitted" on the first one that did - and it costs the same
+    # $0.20 as one. The first source is the strongest; the rest live in the repo.
+    first = inc.source.split(";")[0].strip() if inc.source else ""
+    parts = [p for p in (inc.detail, f"Source: {first}" if first else "") if p]
     return clip("\n\n".join(parts))
 
 
@@ -255,9 +260,16 @@ class Fanout(Poster):
             except Exception as e:  # one platform failing shouldn't kill the other
                 print(f"[warn] {type(be).__name__} failed: {e}", file=sys.stderr)
                 ids.append(None)
-        key = ids[0] or ids[1] or f"local-{len(self._map)}"
+        # Not ids[0] or ids[1]: with a single backend a failure left ids == [None]
+        # and this raised IndexError, turning "the reply didn't send" into a
+        # crash that lost the state write for a post that had already gone out.
+        key = next((i for i in ids if i), f"local-{len(self._map)}")
         self._map[key] = ids
         return key
+
+    @property
+    def last_failed(self) -> bool:
+        return bool(self._map) and not any(list(self._map.values())[-1])
 
 
 # ── main ─────────────────────────────────────────────────────────────────────
@@ -344,6 +356,10 @@ def main() -> None:
                    + (f"Previous record: {prior_record} days. " if prior_record is not None else "")
                    + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
+        if str(root).startswith("local-"):
+            # Nothing reached X. Leave state untouched so the next run
+            # retries, rather than recording a post that never happened.
+            sys.exit("the post did not go out; state left untouched")
         poster.post(reply_text(latest), reply_to=root)
         state["record_announced_for"] = None
     else:
@@ -355,6 +371,10 @@ def main() -> None:
                + (f"Previous record: {record} days. " if record is not None else "")
                + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
+        if str(root).startswith("local-"):
+            # Nothing reached X. Leave state untouched so the next run
+            # retries, rather than recording a post that never happened.
+            sys.exit("the post did not go out; state left untouched")
         if is_new_record:
             state["record_announced_for"] = latest.id
 
