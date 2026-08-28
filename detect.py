@@ -222,6 +222,14 @@ TOOLS = [
                                                      "a good finding be held back for length."},
                             "detail": {"type": "string",
                                        "description": "One sentence of context for the reply."},
+                            "digest_url": {
+                                "type": "string",
+                                "description": "The AI StopWatch URL for this item - the "
+                                               "aistop.watch/i/... section anchor if the dispatch "
+                                               "shows one for it, otherwise the dispatch's own "
+                                               "aistop.watch/p/... link from its header. This is "
+                                               "the only link the post carries.",
+                            },
                             "sources": {
                                 "type": "array",
                                 "minItems": 1,
@@ -258,8 +266,8 @@ TOOLS = [
                             },
                         },
                         "required": ["date", "company", "tier", "category", "tone", "title",
-                                     "detail", "sources", "independent_sources", "establishment",
-                                     "confidence", "recommend", "reasoning"],
+                                     "detail", "digest_url", "sources", "independent_sources",
+                                     "establishment", "confidence", "recommend", "reasoning"],
                         "additionalProperties": False,
                     },
                 },
@@ -322,7 +330,9 @@ def parse_digest(xml: str, today: date) -> str:
         body = re.sub(r"<(p|div|h[1-6]|li|br)[^>]*>", "\n", body)
         body = unescape(re.sub(r"<[^>]+>", "", body))
         body = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+", " ", body)).strip()
-        out.append(f"===== DISPATCH {pub.isoformat()} - {unescape(field('title'))} =====\n\n{body}")
+        link = field("link").strip()
+        out.append(f"===== DISPATCH {pub.isoformat()} - {unescape(field('title'))} "
+                   f"({link}) =====\n\n{body}")
 
     if not out:
         raise RuntimeError(f"no digest dispatches since {cutoff}; has the feed moved?")
@@ -379,6 +389,7 @@ def entry_yaml(f: dict, iid: str) -> str:
             f"    title: {q(f['title'])}\n"
             f"    detail: {q(f['detail'])}\n"
             f"    source: {q(src)}\n"
+            f"    digest: {q(f.get('digest_url', ''))}\n"
             f"    confidence: {f['confidence']}\n")
 
 

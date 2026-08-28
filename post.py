@@ -9,7 +9,7 @@ Behaviour
 ---------
 1. Reads incidents.yaml, finds the most recent `resets: true` entry.
 2. If that entry's id differs from state.json → posts a RESET (streak ended),
-   then a reply with the detail + source.
+   then a reply with the detail and the AI StopWatch link.
 3. Otherwise posts the daily count with the sign image.
    If the current streak beats the previous record, says so.
 4. Any tier-2 entries added since the last run get posted as an "honourable
@@ -66,13 +66,15 @@ class Incident:
     title: str
     detail: str
     source: str
+    digest: str = ""      # AI StopWatch permalink; absent on hand-added entries
 
     @classmethod
     def from_dict(cls, d: dict) -> "Incident":
         return cls(
             id=d["id"], date=_as_date(d["date"]), company=d["company"], category=d["category"],
             tier=int(d["tier"]), resets=bool(d["resets"]), tone=d.get("tone", "snark"),
-            title=d["title"].strip(), detail=d.get("detail", "").strip(), source=d.get("source", "").strip(),
+            title=d["title"].strip(), detail=d.get("detail", "").strip(),
+            source=d.get("source", "").strip(), digest=d.get("digest", "").strip(),
         )
 
 
@@ -148,18 +150,37 @@ def reset_text(inc: Incident, streak: int, record: int | None, days_now: int) ->
     return clip(body)
 
 
+def link_for(inc: Incident) -> str:
+    """The one URL a post is allowed to carry.
+
+    AI StopWatch, where the account gets its candidates - one consistent
+    destination, it credits the newsroom doing the reading, and it is a single
+    link rather than the four that drew a 403. The primary sources stay in
+    incidents.yaml, which is the actual evidence record. Entries added by hand
+    through the issue form have no digest link, so they fall back to their own
+    source.
+    """
+    for candidate in (inc.digest, inc.source.split(";")[0].strip()):
+        # Older entries record a citation rather than a URL ("Reuters,
+        # 2025-08-20"); those are for the repo, not for a "More:" line.
+        if candidate.startswith("http"):
+            return candidate
+    return ""
+
+
 def reply_text(inc: Incident) -> str:
-    # One link, not all of them. The detector records every source it used in
-    # incidents.yaml, but a post carrying four URLs is spam-shaped - X returned
-    # 403 "not permitted" on the first one that did - and it costs the same
-    # $0.20 as one. The first source is the strongest; the rest live in the repo.
-    first = inc.source.split(";")[0].strip() if inc.source else ""
-    parts = [p for p in (inc.detail, f"Source: {first}" if first else "") if p]
-    return clip("\n\n".join(parts))
+    link = link_for(inc)
+    tail = f"\n\nMore: {link}" if link else ""
+    # Reserve the link's room first. Clipping the joined string instead dropped
+    # the URL off the end of a long detail, leaving a post with no link at all.
+    return clip(inc.detail, MAX_LEN - len(tail)) + tail
 
 
 def mention_text(inc: Incident) -> str:
-    return clip(f"Noted but not counter-resetting (tier 2): {inc.company} — {inc.title}\n\nSource: {inc.source}")
+    link = link_for(inc)
+    tail = f"\n\nMore: {link}" if link else ""
+    return clip(f"Noted but not counter-resetting (tier 2): {inc.company} — {inc.title}",
+                MAX_LEN - len(tail)) + tail
 
 
 # ── posting backends ─────────────────────────────────────────────────────────
