@@ -254,6 +254,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--force", action="store_true", help="post even if already posted today")
+    ap.add_argument("--on-new", action="store_true",
+                    help="push mode: post only if incidents.yaml actually gained something "
+                         "(a new reset or a new tier-2 mention); edits to existing entries post nothing")
     ap.add_argument("--today", help="override today's date (yyyy-mm-dd) for testing")
     a = ap.parse_args()
 
@@ -265,7 +268,18 @@ def main() -> None:
     latest = resetting[-1]
     state = load_state()
 
-    if state.get("last_post_date") == today.isoformat() and not a.force:
+    known_ids = set(state.get("known_ids", []))
+    new_mentions = [i for i in incidents if i.tier == 2 and i.id not in known_ids and known_ids]
+    is_reset = state.get("last_incident_id") not in (None, latest.id)
+
+    # --on-new is what the push trigger uses. Any edit to incidents.yaml fires that
+    # workflow, including typo fixes and confidence bumps, and those must stay silent.
+    if a.on_new and not (is_reset or new_mentions):
+        print("incidents.yaml changed but nothing new to announce")
+        return
+
+    posted_today = state.get("last_post_date") == today.isoformat()
+    if posted_today and not (a.force or (a.on_new and (is_reset or new_mentions))):
         print("already posted today; use --force to override")
         return
 
@@ -293,10 +307,7 @@ def main() -> None:
     global NOUN
     censor = "incident" if latest.tone == "somber" else CENSOR
     NOUN = noun_forms(censor)[1]
-    known_ids = set(state.get("known_ids", []))
-    new_mentions = [i for i in incidents if i.tier == 2 and i.id not in known_ids and known_ids]
-
-    if state.get("last_incident_id") not in (None, latest.id):
+    if is_reset:
         # ── RESET ──
         prev = next(i for i in resetting if i.id == state["last_incident_id"])
         streak = (latest.date - prev.date).days

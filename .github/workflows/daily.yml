@@ -37,8 +37,9 @@ jobs:
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             python post.py --dry-run
           else
-            # on a push (new incident) force so the reset goes out even if the daily already ran
-            if [ "${{ github.event_name }}" = "push" ]; then python post.py --force; else python post.py; fi
+            # on a push, post only if incidents.yaml gained something, but do post
+            # even if the daily already went out today
+            if [ "${{ github.event_name }}" = "push" ]; then python post.py --on-new; else python post.py; fi
           fi
       - name: commit state
         if: github.event.inputs.dry_run != 'true'
