@@ -2,7 +2,12 @@ name: daily counter post
 
 on:
   schedule:
+    # GitHub delays or silently drops scheduled runs, so these are retries, not
+    # extra posts: post.py exits early once it has posted for the local day.
     - cron: "0 22 * * *"        # 22:00 UTC = 08:00 AEST / 09:00 AEDT (Newcastle morning)
+    - cron: "30 23 * * *"       # 09:30 AEST
+    - cron: "0 1 * * *"         # 11:00 AEST
+    - cron: "0 3 * * *"         # 13:00 AEST - last chance for the same local day
   push:
     paths: ["incidents.yaml"]   # adding an incident → immediate reset post
   workflow_dispatch:
