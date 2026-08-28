@@ -149,8 +149,15 @@ measures what the world could see, so it cannot start before disclosure. Where
 first disclosure and wide coverage differ, say which is which in your reasoning.
 
 TONE
-Set tone "somber" for anything involving a death, a child, or abuse imagery.
-Those posts drop the jokes entirely. If in doubt, somber.
+"somber" means one specific thing: a real person died, a child was involved, or
+abuse imagery. Those posts drop the sign, the swear and the record line, because
+a joke over a body is indefensible.
+
+It does not mean serious, alarming, or large. A breach, a rogue agent, a
+governance collapse, a nation-state actor - all snark, however grave they are.
+Reach for somber only when a named human being was harmed, and say in your
+reasoning which of the three applies. Marking an ordinary corporate failure
+somber wastes the one gesture the account has for the days that need it.
 
 Be conservative. Recommend "post" only for things you would defend in public
 against the company's own comms team. Recommend "hold" for anything you believe
@@ -187,10 +194,15 @@ TOOLS = [
                             "tier": {"type": "integer", "enum": [1, 2]},
                             "category": {"type": "string", "enum": CATEGORIES},
                             "tone": {"type": "string", "enum": ["snark", "somber"]},
-                            "title": {"type": "string", "maxLength": 120,
+                            # No maxLength here. Adding one to this strict schema
+                            # coincided with the model emitting its whole tool
+                            # call as text instead of structured input; the limit
+                            # is stated in the description and checked in
+                            # qualifies() instead.
+                            "title": {"type": "string",
                                       "description": "One line, at most 120 characters - it is rendered "
                                                      "on the sign, so write it short rather than letting "
-                                                     "a good finding be rejected for length."},
+                                                     "a good finding be held back for length."},
                             "detail": {"type": "string",
                                        "description": "One sentence of context for the reply."},
                             "sources": {
@@ -399,24 +411,19 @@ def research(prompt: str) -> dict:
         tools=TOOLS,
         output_config={"effort": EFFORT},
         thinking={"type": "adaptive"},
-        # A search sweep is dozens of server-tool round trips and every one
-        # re-sends the whole accumulated conversation. The first metered run
-        # billed 3.64M input tokens for a single sweep. Caching the growing
-        # prefix is the one lever that costs nothing in quality.
-        cache_control={"type": "ephemeral"},
+        # No cache_control. It was added to survive the 3.6M-token search sweep;
+        # the digest prompt is ~18k, so it buys almost nothing, and it was one of
+        # two changes present on the run where the model returned its tool call
+        # as text. Not worth carrying an unverified parameter for no gain.
         messages=[{"role": "user", "content": prompt}],
     )
     # Server-side refusal fallback: a safety classifier declining a sweep about
     # harm at AI companies would otherwise end the run. Dropped rather than
     # fatal if the installed SDK predates the parameter.
-    # Degrade one optional parameter at a time rather than failing the sweep:
-    # an SDK too old for any of these should still produce findings.
     attempts = [
         ("full", client.beta.messages.stream,
          dict(betas=["server-side-fallback-2026-07-01"], fallbacks="default", **kwargs)),
         ("without refusal fallback", client.messages.stream, dict(kwargs)),
-        ("without prompt caching", client.messages.stream,
-         {k: v for k, v in kwargs.items() if k != "cache_control"}),
     ]
     msg = None
     for label, call, params in attempts:
@@ -434,10 +441,36 @@ def research(prompt: str) -> dict:
     for block in msg.content:
         if block.type == "tool_use" and block.name == "submit_findings":
             payload = dict(block.input)
-            payload["_usage"] = {"input": msg.usage.input_tokens,
-                                 "output": msg.usage.output_tokens}
-            return payload
+            payload["_usage"] = {k: v for k, v in vars(msg.usage).items()
+                                 if isinstance(v, int)}
+            return salvage(payload)
     raise RuntimeError(f"no submit_findings call (stop_reason={msg.stop_reason})")
+
+
+def salvage(payload: dict) -> dict:
+    """Guard against a tool call that came back serialised into one field.
+
+    Opus 5 has been seen packing the whole call into the first parameter as
+    text - sweep_notes ending in `</sweep_notes><parameter name="findings">[...]`
+    with findings empty. A detector that reports "nothing found" when it in fact
+    found things is the worst failure this file can have, because it is
+    indistinguishable from a quiet day. Recover if possible, and refuse to
+    return a false all-clear if not.
+    """
+    notes = payload.get("sweep_notes", "")
+    if payload.get("findings") or '<parameter name="findings"' not in notes:
+        return payload
+    m = re.search(r'<parameter name="findings">\s*(\[.*)', notes, re.S)
+    if m:
+        try:
+            payload["findings"] = json.loads(m.group(1).strip())
+            payload["sweep_notes"] = notes[:m.start()].replace("</sweep_notes>", "").strip()
+            print(f"[warn] tool call came back as text; recovered "
+                  f"{len(payload['findings'])} finding(s)", file=sys.stderr)
+            return payload
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"tool call came back as text and would not parse: {e}")
+    raise RuntimeError("tool call came back as text; refusing to report a false all-clear")
 
 
 # ── main ─────────────────────────────────────────────────────────────────────
