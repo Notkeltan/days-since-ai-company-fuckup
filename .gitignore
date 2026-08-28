@@ -1,5 +1,4 @@
 __pycache__/
 *.pyc
-fonts/
 out/review.json
 out/detection.json

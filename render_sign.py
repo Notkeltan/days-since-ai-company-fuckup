@@ -19,8 +19,10 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = Path(__file__).resolve().parent
 FONTS = HERE / "fonts"
 
-# Fonts are OFL (Google Fonts) and are fetched on first use rather than
-# committed to the repo. Cached in ./fonts (gitignored).
+# Fonts are OFL (Google Fonts) and are committed under ./fonts with their
+# licences. The account posts unattended, so it must not depend on a remote
+# URL still resolving at 08:00; ensure_fonts() is only a fallback for a
+# checkout that somehow lacks them.
 FONT_URLS = {
     "Anton-Regular.ttf": "https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf",
     "Oswald-Bold.ttf": "https://github.com/google/fonts/raw/main/ofl/oswald/Oswald%5Bwght%5D.ttf",
