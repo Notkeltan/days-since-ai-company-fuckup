@@ -74,12 +74,13 @@ def font(name: str, size: int, weight: int | None = None) -> ImageFont.FreeTypeF
 
 
 def fit(draw, text: str, name: str, max_w: int, start: int, min_size: int = 24,
-        weight: int | None = None) -> ImageFont.FreeTypeFont:
-    """Largest font size (<= start) at which `text` fits in `max_w`."""
+        weight: int | None = None, max_h: int | None = None) -> ImageFont.FreeTypeFont:
+    """Largest font size (<= start) at which `text` fits in `max_w` (and `max_h`)."""
     size = start
     while size > min_size:
         f = font(name, size, weight)
-        if draw.textlength(text, font=f) <= max_w:
+        bb = f.getbbox(text)
+        if draw.textlength(text, font=f) <= max_w and (max_h is None or bb[3] - bb[1] <= max_h):
             return f
         size -= 2
     return font(name, min_size, weight)
@@ -183,11 +184,13 @@ def render(days: int, *, record: int | None = None, last: str | None = None,
 
     # the number, boxed
     num = str(days)
-    f_num = fit(d, num, "Anton-Regular.ttf", 520, 380, min_size=180)
+    box_h = 330
+    # cap the height too, or 1-3 digit numbers run past the box's 10px border
+    f_num = fit(d, num, "Anton-Regular.ttf", 520, 380, min_size=180, max_h=box_h - 44)
     nb = f_num.getbbox(num)
     nw = d.textlength(num, font=f_num)
     nh = nb[3] - nb[1]
-    box_w, box_h = max(int(nw) + 120, 360), 330
+    box_w = max(int(nw) + 120, 360)
     bx0, by0 = (W - box_w) // 2, 180
     d.rectangle([bx0, by0, bx0 + box_w, by0 + box_h], outline=accent, width=10, fill=(255, 255, 255))
     d.text(((W - nw) / 2, by0 + (box_h - nh) / 2 - nb[1]), num, font=f_num, fill=accent)

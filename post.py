@@ -81,18 +81,18 @@ def _as_date(v) -> date:
 
 
 def load_incidents() -> list[Incident]:
-    data = yaml.safe_load(INCIDENTS.read_text())
+    data = yaml.safe_load(INCIDENTS.read_text(encoding="utf-8"))
     items = [Incident.from_dict(d) for d in data["incidents"]]
     items.sort(key=lambda i: i.date)
     return items
 
 
 def load_state() -> dict:
-    return json.loads(STATE.read_text()) if STATE.exists() else {}
+    return json.loads(STATE.read_text(encoding="utf-8")) if STATE.exists() else {}
 
 
 def save_state(s: dict) -> None:
-    STATE.write_text(json.dumps(s, indent=2) + "\n")
+    STATE.write_text(json.dumps(s, indent=2) + "\n", encoding="utf-8")
 
 
 def days_word(n: int) -> str:

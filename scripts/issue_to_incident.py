@@ -43,7 +43,7 @@ def slug(lab: str, title: str, d: str) -> str:
     base = re.sub(r"[^a-z0-9]+", "-", f"{lab} {title}".lower()).strip("-")
     if len(base) > 48:
         base = base[:48].rsplit("-", 1)[0]
-    existing = {i["id"] for i in yaml.safe_load(INCIDENTS.read_text())["incidents"]}
+    existing = {i["id"] for i in yaml.safe_load(INCIDENTS.read_text(encoding="utf-8"))["incidents"]}
     s = base
     n = 2
     while s in existing:
@@ -57,7 +57,7 @@ def q(s: str) -> str:
 
 
 def main() -> None:
-    body = Path(sys.argv[1]).read_text()
+    body = Path(sys.argv[1]).read_text(encoding="utf-8")
     f = parse(body)
     entry = (
         f"\n  - id: {slug(f['lab'], f['title'], f['date'])}\n"
@@ -72,9 +72,9 @@ def main() -> None:
         f"    source: {q(f['source'])}\n"
         f"    confidence: {f['confidence']}\n"
     )
-    text = INCIDENTS.read_text().rstrip("\n") + "\n" + entry
+    text = INCIDENTS.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry
     yaml.safe_load(text)  # must still parse
-    INCIDENTS.write_text(text)
+    INCIDENTS.write_text(text, encoding="utf-8")
     print(entry)
 
 
