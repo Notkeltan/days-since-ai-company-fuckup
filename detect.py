@@ -433,6 +433,17 @@ def research(prompt: str) -> dict:
             break
         except TypeError as e:
             print(f"[warn] {label} rejected by this SDK ({e}); retrying reduced", file=sys.stderr)
+        except anthropic.APIStatusError as e:
+            # Say the useful thing rather than 40 lines of stream internals.
+            detail = str(e)
+            if "credit balance is too low" in detail:
+                sys.exit("Anthropic credit balance is empty - top it up in the console. "
+                         "The counter keeps posting; it just is not watching until then.")
+            if e.status_code == 401:
+                sys.exit("ANTHROPIC_API_KEY rejected (401). Check the secret.")
+            if e.status_code == 429:
+                sys.exit("Rate limited by the Anthropic API (429). Nothing posted; try later.")
+            raise
     if msg is None:
         raise RuntimeError("every request shape was rejected; check the anthropic SDK version")
 

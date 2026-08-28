@@ -45,6 +45,9 @@ jobs:
           DETECTOR_LOOKBACK: ${{ vars.DETECTOR_LOOKBACK }}
           DIGEST_FEED: ${{ vars.DIGEST_FEED }}
         run: |
+          # pipefail or `tee` swallows detect.py's exit code and a failed sweep
+          # reports success - which is exactly how a dead detector hides.
+          set -o pipefail
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             python detect.py --dry-run | tee /tmp/sweep.txt
           else
