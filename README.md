@@ -49,6 +49,7 @@ The account says "company", never "lab". The word does quiet work for them: labo
 - Daily post at 08:00 Newcastle: the sign + "N days since the last major AI company f**kup. Previous record: M days."
 - The sign's footer describes the last incident (date · company, then the one-line title), so every post is self-contained — no thread-reading needed to get the joke.
 - Records: when the current streak beats the longest previous gap it says so once, then "Still a record" thereafter. The "previous record" line is what makes the sign feel like a real sign.
+- **The record line stays off until the account has watched two resets happen for itself.** `state.json`'s `resets_seen` counts the resets this account actually posted; below two, the line is dropped from the sign, the caption and the alt text. Quoting a 242-day record from seed data on week one is the account asserting something it wasn't around for, which is exactly the credibility it can't afford to spend. Once it has seen two, the full historical record comes back.
 - Reset posts thread a reply with the one-line detail and source. Tier 2 additions thread as replies too.
 - `state.json` remembers what was posted so the reset fires exactly once. CI commits it back.
 - Alt text on every image (the sign text in full) — cheap, and comms people notice.

@@ -283,8 +283,17 @@ def main() -> None:
         print("already posted today; use --force to override")
         return
 
+    # The record line stays off until the account has watched two resets happen
+    # for itself. Before that it would be quoting history it wasn't around for.
+    # `resets_seen` counts the resets this account actually posted, including the
+    # one going out right now.
+    resets_seen = list(state.get("resets_seen", []))
+    if is_reset and latest.id not in resets_seen:
+        resets_seen.append(latest.id)
+    show_record = len(resets_seen) >= 2
+
     done = streaks(resetting)
-    record = max((s[0] for s in done), default=None)
+    record = max((s[0] for s in done), default=None) if show_record else None
     record_from = None
     if record is not None:
         rs = max(done, key=lambda s: s[0])
@@ -311,7 +320,7 @@ def main() -> None:
         # ── RESET ──
         prev = next(i for i in resetting if i.id == state["last_incident_id"])
         streak = (latest.date - prev.date).days
-        prior_record = max((s[0] for s in done if s[2].id != latest.id), default=None)
+        prior_record = max((s[0] for s in done if s[2].id != latest.id), default=None) if show_record else None
         text = reset_text(latest, streak, prior_record)
         img = None
         alt = ""
@@ -319,7 +328,8 @@ def main() -> None:
             img = OUT / "reset.png"
             render(0, record=prior_record, last=last_label, last_title=latest.title, handle=HANDLE, censor=censor).save(img)
             alt = (f"Workplace-safety-style sign reading: This industry has gone 0 days since the last major AI company {NOUN}. "
-                   f"Last {NOUN}: {last_label} — {latest.title}")
+                   + (f"Previous record: {prior_record} days. " if prior_record is not None else "")
+                   + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
         poster.post(reply_text(latest), reply_to=root)
         state["record_announced_for"] = None
@@ -342,6 +352,7 @@ def main() -> None:
         "last_incident_id": latest.id,
         "last_post_date": today.isoformat(),
         "known_ids": sorted({i.id for i in incidents}),
+        "resets_seen": resets_seen,
     })
     if not a.dry_run:
         save_state(state)
