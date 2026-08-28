@@ -102,16 +102,32 @@ python render_sign.py --days 12 --record 47 --last "2026-01-08 · xAI" -o sign.p
 4. Run the workflow manually once with `dry_run: true`, then for real.
 5. **Before go-live: verify `incidents.yaml`.** Pre-2026 entries were written from Claude's memory; 2026 entries came from a web-search pass on 2026-08-25 with real URLs. The `confidence` field says which to check hardest; the `low` ones have approximate dates or secondary sources. Feb–May 2026 looks thin.
 
-## Launch checklist (state as of 2026-08-25)
+## Status (2026-08-28)
 
-Done: developer account (@xRiskMemes), app permissions set to Read and Write, callback/website URLs saved, code switched to X API v2 + pay-per-use, profile assets rendered, private GitHub repo created with the code and the two repo variables.
+**Live.** First post went out 2026-08-27; the account has posted every day
+since. The X credentials in the repo secrets work (the 2026-08-25 run failed
+401 on the first set; they were replaced on 2026-08-27).
+
+Working end to end: the daily post, the sign renderer, the incident issue form
+and its workflow, state commit-back.
 
 Left, all needing you:
-- [ ] Developer Console → app → Keys & Tokens: reveal the Consumer Key/Secret, click Generate on the OAuth 1.0 Access Token (must show "Read and write"). Copy all four.
-- [ ] Developer Console → Billing → Credits: buy the minimum credit pack and set a spending limit (a few dollars/month is plenty).
-- [ ] GitHub (repo exists: Notkeltan/days-since-ai-lab-fuckup, private): add the four secrets, run the workflow once with `dry_run: true`, then for real.
-- [ ] X profile: display name, bio, avatar (`out/avatar.png`), header (`out/header.png`), and decide whether the handle stays @xRiskMemes.
-- [ ] Pin a rules post linking the repo's README.
+- [ ] Developer Console -> Billing -> Credits: set a spending limit. Still not
+      set, and it is the only thing standing between a bug and the card.
+- [ ] X profile: display name, bio, avatar, header. Copy in `launch-pack.md`.
+- [ ] Post and pin the five-post rules thread in `launch-pack.md`. Nothing
+      currently explains the account to anyone who finds it.
+- [ ] Verify the `low` and `medium` confidence entries in `incidents.yaml`.
+
+Decided and closed:
+- Handle stays `@xRiskMemes`.
+- The rules thread spells the rubric out instead of linking here, because this
+  repo is private. If it ever goes public, link it from the bio and post 5.
+
+Scheduling note: GitHub delays and sometimes drops cron runs - the first
+scheduled post landed five hours late and the second never fired at all. There
+are now four crons through the local morning; `post.py`'s once-a-day guard
+makes all but the first a no-op.
 
 ## Adding an incident from your phone
 
