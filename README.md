@@ -112,8 +112,9 @@ Working end to end: the daily post, the sign renderer, the incident issue form
 and its workflow, state commit-back.
 
 Left, all needing you:
-- [ ] Developer Console -> Billing -> Credits: set a spending limit. Still not
-      set, and it is the only thing standing between a bug and the card.
+- [x] Developer Console -> Billing -> Credits: billing-cycle spend cap set to
+      $25.00 on 2026-08-28. Auto-recharge is off, so the prepaid balance is a
+      second ceiling - the API stops at $0 either way.
 - [ ] X profile: display name, bio, avatar, header. Copy in `launch-pack.md`.
 - [ ] Post and pin the five-post rules thread in `launch-pack.md`. Nothing
       currently explains the account to anyone who finds it.
