@@ -9,11 +9,13 @@
 What it does
 ------------
 Feeds Claude Opus 5 the last few days of MIRI's AI StopWatch daily digest and
-asks which items, if any, clear this counter's rubric. The digest is the source
-of candidates; the model follows the links in it to read the primary documents,
-because the digest's prose is reporting, not evidence. No web search - a curated
-feed plus link-following is both better sourced and vastly cheaper than a blind
-sweep.
+asks which items, if any, clear this counter's rubric.
+
+No browsing of any kind: one request, one answer. Search cost $19.32 a sweep and
+link-following cost $3.20; the digest alone is about $0.20. The trade is real
+and deliberate - the model can no longer open the documents it cites, so the
+brief tells it to treat the dispatch text as its only witness and to be harder
+to convince as a result.
 
 Whatever it returns is then put through `qualifies()` here in Python. The model
 recommends; this file decides. A finding only reaches incidents.yaml if it
@@ -115,18 +117,29 @@ full. It is a curated feed, not a search result: assume the editors already
 judged these items worth writing up, and that your job is the different one of
 deciding which of them clear this counter's rubric.
 
-Two things follow from the source being curated. First, the digest has a point
-of view - it is written by people who think this technology is dangerous. Your
-rubric does not change because of that. An item written up with alarm can still
-be a capability announcement, a lawsuit, or a company outside scope, and you
-should say so. Second, the digest's prose is not a source. Follow the links it
-gives and read the primary document before you call something acknowledged or
-corroborated - a company's own report, a regulator's notice, an independent
-investigator's postmortem. Quote what that document actually says, not what the
-digest says about it.
+The digest has a point of view - it is written by people who think this
+technology is dangerous. Your rubric does not change because of that. An item
+written up with alarm can still be a capability announcement, a lawsuit, or a
+company outside scope, and you should say so.
 
-If a dispatch describes something serious but you cannot reach a primary source
-for it, that is a hold, not a rejection.
+YOU CANNOT BROWSE
+You have no search and no fetch. The dispatch text in front of you is the entire
+evidence base, and you must not pretend otherwise. Never claim you read a
+document you were only given a link to.
+
+That changes what the source fields mean, so read this carefully. Mark a source
+primary when the dispatch shows you the primary document's own content - quotes
+it, or describes its specific contents closely enough that the reporting is
+plainly derived from reading it. A bare link with no description of what is in
+it is NOT a primary source you can count; it is a lead. Say in your reasoning
+which words in the dispatch you are relying on.
+
+Because you cannot check anything, be harder to convince than you would be with
+the documents open. Claim "acknowledged" only where the dispatch shows the
+company saying the thing itself. Where the dispatch is summarising other
+people's reporting, that is at best "corroborated", and often "single_report".
+When the dispatch is your only witness and it is thin, hold. Tomorrow's dispatch
+costs nothing and often settles it.
 
 WHAT COUNTS AS CORROBORATED
 Two outlets rewriting the same wire story are ONE source. Independence means
@@ -165,9 +178,10 @@ but cannot yet stand up, and say what would confirm it. Returning nothing is a
 perfectly good answer and most days it is the right one."""
 
 TOOLS = [
-    # No web_search. The digest is the source; web_fetch is only for reading the
-    # primary documents it links to, which is what the evidence bar needs.
-    {"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": 25},
+    # No browsing at all. web_fetch reading three linked documents took one sweep
+    # from ~20k input tokens to 594k, because every round trip resends what has
+    # accumulated. With no server tools this is a single request: one prompt, one
+    # answer. The digest text is the whole evidence base - see the brief.
     {
         "name": "submit_findings",
         "description": "Report the sweep's results. Call exactly once, at the end, "
@@ -178,8 +192,11 @@ TOOLS = [
             "properties": {
                 "sweep_notes": {
                     "type": "string",
-                    "description": "What you searched and what you deliberately ruled out. "
-                                   "Read by a human when the sweep looks wrong.",
+                    "description": "Under 150 words. Which dispatches you read, and a bare "
+                                   "list of what you ruled out with three or four words of "
+                                   "reason each - 'lawsuit', 'out of scope', 'before the "
+                                   "window'. No prose. Your per-finding reasoning is where "
+                                   "the argument goes; this is only an index.",
                 },
                 "findings": {
                     "type": "array",
@@ -235,8 +252,9 @@ TOOLS = [
                             "recommend": {"type": "string", "enum": ["post", "hold"]},
                             "reasoning": {
                                 "type": "string",
-                                "description": "Why it clears or fails the rubric, and for a hold, "
-                                               "what would confirm it.",
+                                "description": "Under 120 words. Why it clears or fails the rubric, "
+                                               "which words in the dispatch you are relying on, and "
+                                               "for a hold, what would confirm it.",
                             },
                         },
                         "required": ["date", "company", "tier", "category", "tone", "title",

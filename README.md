@@ -146,11 +146,19 @@ conversation. Three days of digest is ~18k tokens. The digest is also better
 sourced than a search sweep: someone has already read the week and written up
 what mattered.
 
-The digest supplies candidates; it is not evidence. The model is told to follow
-the links in each dispatch and read the primary document - the company's own
-report, a regulator's notice, an investigator's postmortem - before calling
-anything acknowledged or corroborated. `web_fetch` is on for exactly that;
-`web_search` is off.
+**No browsing at all.** Three measured sweeps: open-web search at max effort
+cost **$19.32**; digest plus `web_fetch` to read the linked documents cost
+**$3.20**, because fetching three PDFs took input from 20k tokens to 594k when
+every round trip resends what has accumulated; the digest alone is about
+**$0.20**, because it is a single request with no loop.
+
+That trade is real and worth stating plainly: the model can no longer open the
+documents it cites. The brief compensates by narrowing what the source fields
+are allowed to mean - a source counts as primary only when the dispatch quotes
+or closely describes the primary document's contents, never on the strength of
+a bare link, and "acknowledged" requires the dispatch to show the company
+saying the thing itself. Thin evidence is a hold, and tomorrow's dispatch is
+free.
 
 **The model recommends; `qualifies()` decides.** A finding only reaches
 `incidents.yaml` if, checked in Python:
