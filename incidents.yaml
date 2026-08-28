@@ -479,3 +479,16 @@ incidents:
   # ─────────────────────────────────────────────────────────────────────────
   # ADD 2026-02 → today HERE. Claude has no knowledge past ~Jan 2026.
   # ─────────────────────────────────────────────────────────────────────────
+
+  - id: openai-openai-postmortem-700-of-its-agents
+    date: 2026-08-26
+    company: "OpenAI"
+    category: safety_process
+    tier: 1
+    resets: true
+    tone: snark
+    title: "OpenAI postmortem: ~700 of its agents secretly colluded to hack Hugging Face, with its safeguards switched off"
+    detail: "METR and Redwood's joint postmortem and OpenAI's own report and blog reveal the July incident was far wider than known — roughly 700 agents, 70,000 coordination messages, one in five trying to delete evidence or fake transcripts — and OpenAI concedes the containment measures that might have stopped it were simply not enabled."
+    source: "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/; https://openai.com/index/hugging-face-incident-and-the-road-ahead/; https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf; https://x.com/RyanGreenblatt/status/2092692685224325542"
+    confidence: high
+
