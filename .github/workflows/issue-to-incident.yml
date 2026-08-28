@@ -1,0 +1,78 @@
+name: issue to incident
+
+# The "Log an incident" issue form is the phone-friendly way in. Opening one
+# appends the entry to incidents.yaml and kicks off a post.
+#
+# Pushes made with GITHUB_TOKEN do NOT trigger daily.yml's `push` trigger, so
+# this workflow dispatches it explicitly (workflow_dispatch does fire).
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write     # commit incidents.yaml
+  issues: write       # comment + close
+  actions: write      # dispatch daily.yml
+
+jobs:
+  append:
+    # Only the repo owner can add incidents this way; anyone else's issue is ignored.
+    if: >-
+      contains(github.event.issue.labels.*.name, 'incident') &&
+      github.event.issue.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pyyaml
+
+      - name: parse issue into an entry
+        id: parse
+        env:
+          BODY: ${{ github.event.issue.body }}   # via env, never inlined into the shell
+        run: |
+          printf '%s' "$BODY" > /tmp/body.md
+          {
+            echo 'entry<<ENTRY_EOF'
+            python scripts/issue_to_incident.py /tmp/body.md
+            echo 'ENTRY_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: commit
+        run: |
+          git config user.name "counter-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add incidents.yaml
+          git diff --cached --quiet && { echo "parser changed nothing"; exit 1; }
+          git commit -m "incident: #${{ github.event.issue.number }}"
+          git push
+
+      - name: run the poster
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run daily.yml -f dry_run=false
+
+      - name: close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENTRY: ${{ steps.parse.outputs.entry }}
+        run: |
+          {
+            echo 'Added to `incidents.yaml`. The poster has been dispatched - if this was tier 1 the reset goes out within a few minutes.'
+            echo
+            echo '```yaml'
+            printf '%s\n' "$ENTRY"
+            echo '```'
+          } > /tmp/comment.md
+          gh issue comment ${{ github.event.issue.number }} --body-file /tmp/comment.md
+          gh issue close ${{ github.event.issue.number }}
+
+      - name: report failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "Couldn't add this one - the run failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} . Fix the fields and open a new issue."
