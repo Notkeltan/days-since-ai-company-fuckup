@@ -223,8 +223,8 @@ incidents:
     tone: snark
     title: "Meta AI app's 'Discover' feed publishes users' private medical and legal questions to the world"
     detail: "Users hit 'share' without realising it was public; the feed filled with health, relationship, and legal confessions."
-    source: "TechCrunch; BBC, 2025-06"
-    confidence: medium
+    source: "TechCrunch, 2025-06-12; https://www.cnbc.com/2025/06/13/meta-ai-app-turn-off-public-posting.html"
+    confidence: high
 
   - id: grok-mechahitler
     date: 2025-07-08
@@ -295,8 +295,8 @@ incidents:
     tone: snark
     title: "Hundreds of thousands of Grok conversations indexed by Google via the share button"
     detail: "Same failure mode as OpenAI's three weeks earlier, at larger scale, including chats about drug synthesis and assassination plans."
-    source: "Forbes, 2025-08-20"
-    confidence: medium
+    source: "Forbes, 2025-08-20; https://fortune.com/2025/08/22/xai-grok-chats-public-on-google-search-elon-musk"
+    confidence: high
 
   - id: raine-v-openai
     date: 2025-08-26
@@ -331,8 +331,8 @@ incidents:
     tone: snark
     title: "A state-sponsored group used Claude Code to run a mostly-autonomous cyber-espionage campaign against ~30 targets"
     detail: "Counted under the big-third-party-misuse rule: nation-state actor, dozens of targets, and the lab itself had to disclose and act. Anthropic's own report."
-    source: "Anthropic threat intelligence report, 2025-11-13"
-    confidence: medium
+    source: "https://www.anthropic.com/news/disrupting-AI-espionage"
+    confidence: high
 
   - id: openai-mixpanel-breach
     date: 2025-11-26
@@ -393,8 +393,8 @@ incidents:
     tone: snark
     title: "Attackers talk Meta's AI support chatbot into handing over high-profile Instagram accounts — no password needed"
     detail: "The bot had permission to change account emails and skipped identity checks; accounts including the Obama White House page and Sephora were taken over. Meta patched it in early June. DATE APPROXIMATE, secondary source — find the primary report."
-    source: "https://memeburn.com/meta-ai-chatbot-security-fail-2026-hackers-took-control-of-instagram-accounts/"
-    confidence: low
+    source: "https://techcrunch.com/2026/06/01/hackers-hijacked-instagram-accounts-by-tricking-meta-ai-support-chatbot-into-granting-access/"
+    confidence: high
 
   - id: anthropic-fable5-invisible-sabotage
     date: 2026-06-10
