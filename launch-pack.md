@@ -6,14 +6,14 @@ Everything that has to be typed into X by hand. Nothing here posts itself.
 
 **Display name** (50 char limit)
 
-    Days Since The Last Major AI Lab F**kup
+    Days Since The Last Major AI Company F**kup
 
 **Handle** — staying `@xRiskMemes` (decided 2026-08-28). The sign's small
 handle text follows the `COUNTER_HANDLE` repo variable, already set to match.
 
 **Bio** (160 char limit)
 
-    One number, once a day: days since the last major AI lab f**kup. Resets when a frontier lab has to apologise. Rules in the pinned post. Run by @Actuallykeltan.
+    One number, once a day: days since the last major AI company f**kup. Resets when one of them has to apologise. The rules are pinned. Run by @Actuallykeltan.
 
 **Avatar** `out/avatar.png` (400x400) · **Header** `out/header.png` (1500x500)
 Regenerate either with `python profile_assets.py`.
@@ -28,7 +28,7 @@ That's also why the rubric is spelled out here rather than linked. If the repo
 ever goes public, post 5 is the place to add the link, and the bio line
 "Rules in the pinned post" can become the repo URL.
 
-Post it as a self-thread, then pin post 1.
+Posted 2026-08-28 1:39 PM. What follows is the thread as it went out, kept as the record of what the account has publicly promised.
 
 Days Since The Last Major AI Company F**kup
 @xRiskMemes
