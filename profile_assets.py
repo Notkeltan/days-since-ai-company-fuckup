@@ -57,8 +57,10 @@ def header(censor: str) -> Image.Image:
     f = rs.font("Anton-Regular.ttf", 190)
     rs.draw_censored(d, W / 2, 380, "DAYS SINCE THE LAST", f, rs.BLACK, anchor="m")
     rs.draw_censored(d, W / 2, 600, f"MAJOR AI COMPANY {noun}", f, rs.BLACK, anchor="m")
-    fs = rs.font("Oswald-Bold.ttf", 56, 500)
-    d.text((W / 2, 820), "ONE NUMBER, ONCE A DAY. RESETS WHEN A FRONTIER COMPANY HAS TO APOLOGISE.", font=fs, fill=rs.GREY, anchor="mm")
+    # keltan's call: a byline, not a tagline. The bio already explains the
+    # account, and X crops the header hard on mobile.
+    d.text((W / 2, 790), "made by keltan", font=rs.font("Anton-Regular.ttf", 62), fill=rs.GREY, anchor="mm")
+    d.text((W / 2, 868), "@Actuallykeltan", font=rs.font("Oswald-Bold.ttf", 40, 500), fill=rs.GREY, anchor="mm")
     return img.resize((1500, 500), Image.LANCZOS)
 
 
