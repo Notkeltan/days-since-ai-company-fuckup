@@ -124,10 +124,22 @@ def daily_text(days: int, record: int | None, is_new_record: bool, record_from: 
     return clip(f"{head}\n\nPrevious record: {days_word(record)}.")
 
 
-def reset_text(inc: Incident, streak: int, record: int | None) -> str:
+def reset_text(inc: Incident, streak: int, record: int | None, days_now: int) -> str:
     if inc.tone == "somber":
         # No jokes, no record-keeping flourish, no image.
         return clip(f"Counter reset.\n\n{inc.company}: {inc.title}")
+    if days_now:
+        # Back-dated: incidents are dated to first disclosure, and the detector
+        # can surface one days after the fact. Saying "reset to 0" then would be
+        # a lie by a fortnight, so the post owns the gap instead.
+        body = (f"Counter reset to {days_now}.\n\n{inc.company}: {inc.title}\n\n"
+                f"First disclosed {inc.date.isoformat()}. The streak ended there, "
+                f"at {days_word(streak)}.")
+        if record is not None and streak <= record:
+            body += f" Previous record stands at {days_word(record)}."
+        elif record is not None:
+            body += " That was a new record."
+        return clip(body)
     body = f"Counter reset to 0.\n\n{inc.company}: {inc.title}\n\nStreak ended at {days_word(streak)}."
     if record is not None and streak <= record:
         body += f" Previous record stands at {days_word(record)}."
@@ -321,13 +333,14 @@ def main() -> None:
         prev = next(i for i in resetting if i.id == state["last_incident_id"])
         streak = (latest.date - prev.date).days
         prior_record = max((s[0] for s in done if s[2].id != latest.id), default=None) if show_record else None
-        text = reset_text(latest, streak, prior_record)
+        text = reset_text(latest, streak, prior_record, days)
         img = None
         alt = ""
         if latest.tone != "somber":
             img = OUT / "reset.png"
-            render(0, record=prior_record, last=last_label, last_title=latest.title, handle=HANDLE, censor=censor).save(img)
-            alt = (f"Workplace-safety-style sign reading: This industry has gone 0 days since the last major AI company {NOUN}. "
+            # `days`, not 0 - the sign has to agree with the incident's date
+            render(days, record=prior_record, last=last_label, last_title=latest.title, handle=HANDLE, censor=censor).save(img)
+            alt = (f"Workplace-safety-style sign reading: This industry has gone {days} days since the last major AI company {NOUN}. "
                    + (f"Previous record: {prior_record} days. " if prior_record is not None else "")
                    + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)

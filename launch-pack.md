@@ -6,14 +6,14 @@ Everything that has to be typed into X by hand. Nothing here posts itself.
 
 **Display name** (50 char limit)
 
-    Days Since The Last Major AI Company F**kup
+    Days Since The Last Major AI Lab F**kup
 
 **Handle** — staying `@xRiskMemes` (decided 2026-08-28). The sign's small
 handle text follows the `COUNTER_HANDLE` repo variable, already set to match.
 
 **Bio** (160 char limit)
 
-    One number, once a day: days since the last major AI company f**kup. Resets when one of them has to apologise. The rules are pinned. Run by @Actuallykeltan.
+    One number, once a day: days since the last major AI lab f**kup. Resets when a frontier lab has to apologise. Rules in the pinned post. Run by @Actuallykeltan.
 
 **Avatar** `out/avatar.png` (400x400) · **Header** `out/header.png` (1500x500)
 Regenerate either with `python profile_assets.py`.
@@ -30,63 +30,85 @@ ever goes public, post 5 is the place to add the link, and the bio line
 
 Post it as a self-thread, then pin post 1.
 
----
+Days Since The Last Major AI Company F**kup
+@xRiskMemes
+·
+37s
+Do you know how many days since a major AI lab did something naughty/bad/dangerous?
 
-**1/5**
+The counter resets more often than you would like.
 
-```
-This account posts one number a day: how many days since a major AI company did something it had to apologise for.
+The rules for this account are the same for every fronteer-ish AI Company.
+(1/5) 🧵
+Days Since The Last Major AI Company F**kup
+@xRiskMemes
+The f**kup counter resets when a frontier-ish lab is answerable for:
 
-It resets more often than you would like.
-
-The rules are in this thread. They are the same for every company.
-```
-
-**2/5**
-
-```
-The counter resets when a frontier company - OpenAI, Anthropic, Google DeepMind, Meta, xAI, Microsoft, DeepSeek, Mistral, Amazon, Alibaba - is answerable for:
-
-harmful model behaviour at scale
+harmful model behavior at scale
 exposed user data
 a governance or safety-team collapse
 deception
 large-scale misuse
-```
+Other bad shit as determined by Claude, and sometimes @actuallykeltan
 
-**3/5**
 
-```
-What does not reset it:
+(2/5)
+1:39 PM · Aug 28, 2026
+·
+1
+ 
+View
+Days Since The Last Major AI Company F**kup
 
-Lawsuits. At any stage - filed, settled, decided. This tracks what these companies did, not what they were sued for.
+Days Since The Last Major AI Company F**kup
+@xRiskMemes
+·
+36s
+What does NOT reset the counter:
 
-Anyone who does not train frontier models.
+Companies that don't train frontier models.
 
-Capability announcements.
+Mundane Capability announcements.
 
 Anything without a primary source.
-```
 
-**4/5**
+(3/5)
+Days Since The Last Major AI Company F**kup
+@xRiskMemes
+·
+35s
+Every entry has a primary source before it posts. The date is often when information became public, not when the incident happened.
 
-```
-Every entry has a primary source before it posts. The date is when it became public, not when it happened.
+Smaller things may get logged as replies without resetting the f**kup counter.
 
-Smaller things get logged as replies without resetting the counter.
+(4/5)
+Days Since The Last Major AI Company F**kup
+@xRiskMemes
+·
+35s
+Run by Claude, and made by @Actuallykeltan
+ as a personal project.
 
-When an incident involves a death or a child, the joke comes off: no sign, no swear, no record line.
-```
+If we have gotten something wrong, reply with a source. Corrections will happen ASAP.
 
-**5/5**
+If we have missed something, same.
 
-```
-Run by @Actuallykeltan. Personal project, mine alone.
+(5/5)
+Days Since The Last Major AI Company F**kup
+@xRiskMemes
+·
+34s
+(6/5) Oops!
 
-If I have got something wrong, reply with a source. I will correct it and say that I did.
+This project costs keltan $90-$130 a month.
 
-If I have missed something, same.
-```
+If the project isn't worth the money we'll have to stop. To prevent that you can:
+
+1) Repost/Quote Tweet and encourage others to follow this account
+
+2)
+From buymeacoffee.com
+
 
 ---
 

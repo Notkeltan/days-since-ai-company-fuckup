@@ -178,8 +178,10 @@ TOOLS = [
                             "tier": {"type": "integer", "enum": [1, 2]},
                             "category": {"type": "string", "enum": CATEGORIES},
                             "tone": {"type": "string", "enum": ["snark", "somber"]},
-                            "title": {"type": "string",
-                                      "description": "One line under 120 chars. Goes on the sign."},
+                            "title": {"type": "string", "maxLength": 120,
+                                      "description": "One line, at most 120 characters - it is rendered "
+                                                     "on the sign, so write it short rather than letting "
+                                                     "a good finding be rejected for length."},
                             "detail": {"type": "string",
                                        "description": "One sentence of context for the reply."},
                             "sources": {
@@ -335,20 +337,35 @@ def research(prompt: str) -> dict:
         tools=TOOLS,
         output_config={"effort": EFFORT},
         thinking={"type": "adaptive"},
+        # A search sweep is dozens of server-tool round trips and every one
+        # re-sends the whole accumulated conversation. The first metered run
+        # billed 3.64M input tokens for a single sweep. Caching the growing
+        # prefix is the one lever that costs nothing in quality.
+        cache_control={"type": "ephemeral"},
         messages=[{"role": "user", "content": prompt}],
     )
     # Server-side refusal fallback: a safety classifier declining a sweep about
     # harm at AI companies would otherwise end the run. Dropped rather than
     # fatal if the installed SDK predates the parameter.
-    try:
-        with client.beta.messages.stream(
-            betas=["server-side-fallback-2026-07-01"], fallbacks="default", **kwargs
-        ) as stream:
-            msg = stream.get_final_message()
-    except TypeError as e:
-        print(f"[warn] refusal fallback unavailable ({e}); retrying without it", file=sys.stderr)
-        with client.messages.stream(**kwargs) as stream:
-            msg = stream.get_final_message()
+    # Degrade one optional parameter at a time rather than failing the sweep:
+    # an SDK too old for any of these should still produce findings.
+    attempts = [
+        ("full", client.beta.messages.stream,
+         dict(betas=["server-side-fallback-2026-07-01"], fallbacks="default", **kwargs)),
+        ("without refusal fallback", client.messages.stream, dict(kwargs)),
+        ("without prompt caching", client.messages.stream,
+         {k: v for k, v in kwargs.items() if k != "cache_control"}),
+    ]
+    msg = None
+    for label, call, params in attempts:
+        try:
+            with call(**params) as stream:
+                msg = stream.get_final_message()
+            break
+        except TypeError as e:
+            print(f"[warn] {label} rejected by this SDK ({e}); retrying reduced", file=sys.stderr)
+    if msg is None:
+        raise RuntimeError("every request shape was rejected; check the anthropic SDK version")
 
     if msg.stop_reason == "refusal":
         raise RuntimeError(f"model refused: {getattr(msg, 'stop_details', None)}")
