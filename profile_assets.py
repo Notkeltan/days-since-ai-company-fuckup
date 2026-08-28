@@ -42,7 +42,7 @@ def avatar(censor: str) -> Image.Image:
     fl = rs.font("Oswald-Bold.ttf", 54, 600)
     rs.draw_censored(d, S / 2, 585, "DAYS SINCE THE LAST", fl, rs.BLACK, anchor="m")
     noun = rs.noun_forms(censor)[0]
-    rs.draw_censored(d, S / 2, 645, f"MAJOR AI LAB {noun}", fl, rs.BLACK, anchor="m")
+    rs.draw_censored(d, S / 2, 645, f"MAJOR AI COMPANY {noun}", fl, rs.BLACK, anchor="m")
     return img.resize((400, 400), Image.LANCZOS)
 
 
@@ -56,9 +56,9 @@ def header(censor: str) -> Image.Image:
     noun = rs.noun_forms(censor)[0]
     f = rs.font("Anton-Regular.ttf", 190)
     rs.draw_censored(d, W / 2, 380, "DAYS SINCE THE LAST", f, rs.BLACK, anchor="m")
-    rs.draw_censored(d, W / 2, 600, f"MAJOR AI LAB {noun}", f, rs.BLACK, anchor="m")
+    rs.draw_censored(d, W / 2, 600, f"MAJOR AI COMPANY {noun}", f, rs.BLACK, anchor="m")
     fs = rs.font("Oswald-Bold.ttf", 56, 500)
-    d.text((W / 2, 820), "ONE NUMBER, ONCE A DAY. RESETS WHEN A FRONTIER LAB HAS TO APOLOGISE.", font=fs, fill=rs.GREY, anchor="mm")
+    d.text((W / 2, 820), "ONE NUMBER, ONCE A DAY. RESETS WHEN A FRONTIER COMPANY HAS TO APOLOGISE.", font=fs, fill=rs.GREY, anchor="mm")
     return img.resize((1500, 500), Image.LANCZOS)
 
 

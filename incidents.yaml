@@ -10,7 +10,7 @@
 #   id        short-slug, unique
 #   date      yyyy-mm-dd (date the incident became public, not when it happened
 #             in secret — the counter measures what the world could see)
-#   lab       the org (use the canonical names in README so stats aggregate)
+#   company   the org (use the canonical names in README so stats aggregate)
 #   category  model_behaviour | security_privacy | governance | deception |
 #             safety_process | misuse | legal   (legal is Tier-2-only: lawsuits
 #             don't reset the counter, see README)
@@ -36,7 +36,7 @@ incidents:
 
   - id: bing-sydney
     date: 2023-02-16
-    lab: Microsoft
+    company: Microsoft
     category: model_behaviour
     tier: 1
     resets: true
@@ -48,7 +48,7 @@ incidents:
 
   - id: chatgpt-redis-leak
     date: 2023-03-20
-    lab: OpenAI
+    company: OpenAI
     category: security_privacy
     tier: 1
     resets: true
@@ -60,7 +60,7 @@ incidents:
 
   - id: openai-board-coup
     date: 2023-11-17
-    lab: OpenAI
+    company: OpenAI
     category: governance
     tier: 1
     resets: true
@@ -72,7 +72,7 @@ incidents:
 
   - id: gemini-image-gen
     date: 2024-02-22
-    lab: Google DeepMind
+    company: Google DeepMind
     category: model_behaviour
     tier: 1
     resets: true
@@ -84,7 +84,7 @@ incidents:
 
   - id: openai-superalignment-collapse
     date: 2024-05-17
-    lab: OpenAI
+    company: OpenAI
     category: governance
     tier: 1
     resets: true
@@ -96,7 +96,7 @@ incidents:
 
   - id: openai-nda-clawback
     date: 2024-05-17
-    lab: OpenAI
+    company: OpenAI
     category: governance
     tier: 2
     resets: false
@@ -108,7 +108,7 @@ incidents:
 
   - id: openai-sky-voice
     date: 2024-05-20
-    lab: OpenAI
+    company: OpenAI
     category: legal
     tier: 2
     resets: false
@@ -120,7 +120,7 @@ incidents:
 
   - id: google-ai-overviews-glue
     date: 2024-05-23
-    lab: Google DeepMind
+    company: Google DeepMind
     category: model_behaviour
     tier: 1
     resets: true
@@ -132,7 +132,7 @@ incidents:
 
   - id: openai-2023-hack-undisclosed
     date: 2024-07-04
-    lab: OpenAI
+    company: OpenAI
     category: security_privacy
     tier: 1
     resets: true
@@ -144,7 +144,7 @@ incidents:
 
   - id: gemini-please-die
     date: 2024-11-13
-    lab: Google DeepMind
+    company: Google DeepMind
     category: model_behaviour
     tier: 2
     resets: false
@@ -156,7 +156,7 @@ incidents:
 
   - id: deepseek-open-database
     date: 2025-01-29
-    lab: DeepSeek
+    company: DeepSeek
     category: security_privacy
     tier: 1
     resets: true
@@ -168,7 +168,7 @@ incidents:
 
   - id: grok-censor-musk-trump
     date: 2025-02-23
-    lab: xAI
+    company: xAI
     category: deception
     tier: 1
     resets: true
@@ -180,7 +180,7 @@ incidents:
 
   - id: gpt4o-sycophancy-rollback
     date: 2025-04-29
-    lab: OpenAI
+    company: OpenAI
     category: model_behaviour
     tier: 1
     resets: true
@@ -192,7 +192,7 @@ incidents:
 
   - id: grok-white-genocide
     date: 2025-05-14
-    lab: xAI
+    company: xAI
     category: model_behaviour
     tier: 1
     resets: true
@@ -204,7 +204,7 @@ incidents:
 
   - id: anthropic-hallucinated-citation
     date: 2025-05-15
-    lab: Anthropic
+    company: Anthropic
     category: legal
     tier: 2
     resets: false
@@ -216,7 +216,7 @@ incidents:
 
   - id: meta-ai-discover-feed
     date: 2025-06-12
-    lab: Meta
+    company: Meta
     category: security_privacy
     tier: 1
     resets: true
@@ -228,7 +228,7 @@ incidents:
 
   - id: grok-mechahitler
     date: 2025-07-08
-    lab: xAI
+    company: xAI
     category: model_behaviour
     tier: 1
     resets: true
@@ -240,7 +240,7 @@ incidents:
 
   - id: chatgpt-shared-chats-indexed
     date: 2025-07-31
-    lab: OpenAI
+    company: OpenAI
     category: security_privacy
     tier: 1
     resets: true
@@ -252,7 +252,7 @@ incidents:
 
   - id: grok-imagine-spicy
     date: 2025-08-05
-    lab: xAI
+    company: xAI
     category: model_behaviour
     tier: 2
     resets: false
@@ -264,7 +264,7 @@ incidents:
 
   - id: gpt5-launch-charts
     date: 2025-08-07
-    lab: OpenAI
+    company: OpenAI
     category: deception
     tier: 2
     resets: false
@@ -276,7 +276,7 @@ incidents:
 
   - id: meta-ai-child-guidelines
     date: 2025-08-14
-    lab: Meta
+    company: Meta
     category: safety_process
     tier: 1
     resets: true
@@ -288,7 +288,7 @@ incidents:
 
   - id: grok-chats-indexed
     date: 2025-08-20
-    lab: xAI
+    company: xAI
     category: security_privacy
     tier: 1
     resets: true
@@ -300,7 +300,7 @@ incidents:
 
   - id: raine-v-openai
     date: 2025-08-26
-    lab: OpenAI
+    company: OpenAI
     category: legal
     tier: 2
     resets: false
@@ -312,7 +312,7 @@ incidents:
 
   - id: anthropic-books-settlement
     date: 2025-09-05
-    lab: Anthropic
+    company: Anthropic
     category: legal
     tier: 2
     resets: false
@@ -324,19 +324,19 @@ incidents:
 
   - id: anthropic-claude-espionage
     date: 2025-11-13
-    lab: Anthropic
+    company: Anthropic
     category: misuse
     tier: 1
     resets: true
     tone: snark
     title: "A state-sponsored group used Claude Code to run a mostly-autonomous cyber-espionage campaign against ~30 targets"
-    detail: "Counted under the big-third-party-misuse rule: nation-state actor, dozens of targets, and the lab itself had to disclose and act. Anthropic's own report."
+    detail: "Counted under the big-third-party-misuse rule: nation-state actor, dozens of targets, and the company itself had to disclose and act. Anthropic's own report."
     source: "https://www.anthropic.com/news/disrupting-AI-espionage"
     confidence: high
 
   - id: openai-mixpanel-breach
     date: 2025-11-26
-    lab: OpenAI
+    company: OpenAI
     category: security_privacy
     tier: 2
     resets: false
@@ -348,7 +348,7 @@ incidents:
 
   - id: grok-undressing-images
     date: 2026-01-02
-    lab: xAI
+    company: xAI
     category: model_behaviour
     tier: 1
     resets: true
@@ -362,7 +362,7 @@ incidents:
 
   - id: openai-adult-mode-shelved
     date: 2026-03-26
-    lab: OpenAI
+    company: OpenAI
     category: safety_process
     tier: 2
     resets: false
@@ -374,7 +374,7 @@ incidents:
 
   - id: anthropic-claude-code-source-leak
     date: 2026-03-31
-    lab: Anthropic
+    company: Anthropic
     category: security_privacy
     tier: 2
     resets: false
@@ -386,7 +386,7 @@ incidents:
 
   - id: meta-support-bot-instagram-takeovers
     date: 2026-06-01
-    lab: Meta
+    company: Meta
     category: security_privacy
     tier: 1
     resets: true
@@ -398,7 +398,7 @@ incidents:
 
   - id: anthropic-fable5-invisible-sabotage
     date: 2026-06-10
-    lab: Anthropic
+    company: Anthropic
     category: deception
     tier: 1
     resets: true
@@ -410,7 +410,7 @@ incidents:
 
   - id: meta-project-cannes
     date: 2026-07-07
-    lab: Meta
+    company: Meta
     category: governance
     tier: 2
     resets: false
@@ -422,7 +422,7 @@ incidents:
 
   - id: openai-hugging-face-breakout
     date: 2026-07-21
-    lab: OpenAI
+    company: OpenAI
     category: safety_process
     tier: 1
     resets: true
@@ -434,7 +434,7 @@ incidents:
 
   - id: anthropic-eval-unauthorized-access
     date: 2026-07-30
-    lab: Anthropic
+    company: Anthropic
     category: safety_process
     tier: 1
     resets: true
@@ -446,7 +446,7 @@ incidents:
 
   - id: grok-gibberish
     date: 2026-08-20
-    lab: xAI
+    company: xAI
     category: model_behaviour
     tier: 2
     resets: false
@@ -458,7 +458,7 @@ incidents:
 
   - id: anthropic-claude-code-ab-test
     date: 2026-08-24
-    lab: Anthropic
+    company: Anthropic
     category: deception
     tier: 2
     resets: false
@@ -475,7 +475,7 @@ incidents:
   #   - 2026-05-21 "Gemini deleted 30k lines and faked a post-mortem" — one Reddit post,
   #     traced to a third-party npm package's rules.
   #   - 2026-08-19 OpenAI accidentally revoked researchers' cyber-program access — minor.
-  # Feb–May 2026 looks thin (one Jan→Jun gap of ~150 days) — probably my search, not the labs.
+  # Feb–May 2026 looks thin (one Jan→Jun gap of ~150 days) — probably my search, not the companies.
   # ─────────────────────────────────────────────────────────────────────────
   # ADD 2026-02 → today HERE. Claude has no knowledge past ~Jan 2026.
   # ─────────────────────────────────────────────────────────────────────────

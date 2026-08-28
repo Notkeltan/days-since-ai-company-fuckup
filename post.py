@@ -58,7 +58,7 @@ MAX_LEN = 280
 class Incident:
     id: str
     date: date
-    lab: str
+    company: str
     category: str
     tier: int
     resets: bool
@@ -70,7 +70,7 @@ class Incident:
     @classmethod
     def from_dict(cls, d: dict) -> "Incident":
         return cls(
-            id=d["id"], date=_as_date(d["date"]), lab=d["lab"], category=d["category"],
+            id=d["id"], date=_as_date(d["date"]), company=d["company"], category=d["category"],
             tier=int(d["tier"]), resets=bool(d["resets"]), tone=d.get("tone", "snark"),
             title=d["title"].strip(), detail=d.get("detail", "").strip(), source=d.get("source", "").strip(),
         )
@@ -114,7 +114,7 @@ def clip(text: str, limit: int = MAX_LEN) -> str:
 # ── message templates ───────────────────────────────────────────────────────
 
 def daily_text(days: int, record: int | None, is_new_record: bool, record_from: str | None) -> str:
-    head = f"{days_word(days)} since the last major AI lab {NOUN}."
+    head = f"{days_word(days)} since the last major AI company {NOUN}."
     if record is None:
         return clip(head)
     if is_new_record:
@@ -127,8 +127,8 @@ def daily_text(days: int, record: int | None, is_new_record: bool, record_from: 
 def reset_text(inc: Incident, streak: int, record: int | None) -> str:
     if inc.tone == "somber":
         # No jokes, no record-keeping flourish, no image.
-        return clip(f"Counter reset.\n\n{inc.lab}: {inc.title}")
-    body = f"Counter reset to 0.\n\n{inc.lab}: {inc.title}\n\nStreak ended at {days_word(streak)}."
+        return clip(f"Counter reset.\n\n{inc.company}: {inc.title}")
+    body = f"Counter reset to 0.\n\n{inc.company}: {inc.title}\n\nStreak ended at {days_word(streak)}."
     if record is not None and streak <= record:
         body += f" Previous record stands at {days_word(record)}."
     elif record is not None and streak > record:
@@ -142,7 +142,7 @@ def reply_text(inc: Incident) -> str:
 
 
 def mention_text(inc: Incident) -> str:
-    return clip(f"Noted but not counter-resetting (tier 2): {inc.lab} — {inc.title}\n\nSource: {inc.source}")
+    return clip(f"Noted but not counter-resetting (tier 2): {inc.company} — {inc.title}\n\nSource: {inc.source}")
 
 
 # ── posting backends ─────────────────────────────────────────────────────────
@@ -301,7 +301,7 @@ def main() -> None:
             backends.append(BlueskyPoster())
         poster = Fanout(backends)
 
-    last_label = f"{latest.date.isoformat()} · {latest.lab}"
+    last_label = f"{latest.date.isoformat()} · {latest.company}"
     # Somber rule: while the current reset is a somber one, the sign and the
     # captions say INCIDENT, not the swear. Reverts automatically at the next reset.
     global NOUN
@@ -318,7 +318,7 @@ def main() -> None:
         if latest.tone != "somber":
             img = OUT / "reset.png"
             render(0, record=prior_record, last=last_label, last_title=latest.title, handle=HANDLE, censor=censor).save(img)
-            alt = (f"Workplace-safety-style sign reading: This industry has gone 0 days since the last major AI lab {NOUN}. "
+            alt = (f"Workplace-safety-style sign reading: This industry has gone 0 days since the last major AI company {NOUN}. "
                    f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
         poster.post(reply_text(latest), reply_to=root)
@@ -328,7 +328,7 @@ def main() -> None:
         text = daily_text(days, record, is_new_record, record_from)
         img = OUT / "sign.png"
         render(days, record=record, last=last_label, last_title=latest.title, handle=HANDLE, censor=censor).save(img)
-        alt = (f"Workplace-safety-style sign reading: This industry has gone {days} days since the last major AI lab {NOUN}. "
+        alt = (f"Workplace-safety-style sign reading: This industry has gone {days} days since the last major AI company {NOUN}. "
                + (f"Previous record: {record} days. " if record is not None else "")
                + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)

@@ -6,14 +6,14 @@ Everything that has to be typed into X by hand. Nothing here posts itself.
 
 **Display name** (50 char limit)
 
-    Days Since The Last Major AI Lab F**kup
+    Days Since The Last Major AI Company F**kup
 
 **Handle** — staying `@xRiskMemes` (decided 2026-08-28). The sign's small
 handle text follows the `COUNTER_HANDLE` repo variable, already set to match.
 
 **Bio** (160 char limit)
 
-    One number, once a day: days since the last major AI lab f**kup. Resets when a frontier lab has to apologise. Rules in the pinned post. Run by @Actuallykeltan.
+    One number, once a day: days since the last major AI company f**kup. Resets when one of them has to apologise. The rules are pinned. Run by @Actuallykeltan.
 
 **Avatar** `out/avatar.png` (400x400) · **Header** `out/header.png` (1500x500)
 Regenerate either with `python profile_assets.py`.
@@ -35,17 +35,17 @@ Post it as a self-thread, then pin post 1.
 **1/5**
 
 ```
-This account posts one number a day: how many days since a major AI lab did something it had to apologise for.
+This account posts one number a day: how many days since a major AI company did something it had to apologise for.
 
 It resets more often than you would like.
 
-The rules are in this thread. They are the same for every lab.
+The rules are in this thread. They are the same for every company.
 ```
 
 **2/5**
 
 ```
-The counter resets when a frontier lab - OpenAI, Anthropic, Google DeepMind, Meta, xAI, Microsoft, DeepSeek, Mistral, Amazon, Alibaba - is answerable for:
+The counter resets when a frontier company - OpenAI, Anthropic, Google DeepMind, Meta, xAI, Microsoft, DeepSeek, Mistral, Amazon, Alibaba - is answerable for:
 
 harmful model behaviour at scale
 exposed user data
@@ -59,9 +59,9 @@ large-scale misuse
 ```
 What does not reset it:
 
-Lawsuits. At any stage - filed, settled, decided. This tracks what labs did, not what they were sued for.
+Lawsuits. At any stage - filed, settled, decided. This tracks what these companies did, not what they were sued for.
 
-Companies that don't train frontier models.
+Anyone who does not train frontier models.
 
 Capability announcements.
 

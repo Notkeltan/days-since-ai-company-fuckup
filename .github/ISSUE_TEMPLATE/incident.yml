@@ -12,9 +12,9 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: lab
+    id: company
     attributes:
-      label: Lab
+      label: Company
       options: [OpenAI, Anthropic, Google DeepMind, Meta, xAI, Microsoft, DeepSeek, Mistral, Amazon, Alibaba/Qwen]
     validations:
       required: true

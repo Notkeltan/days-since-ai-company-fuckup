@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the "DAYS SINCE THE LAST MAJOR AI LAB F**KUP" sign as a PNG.
+"""Render the "DAYS SINCE THE LAST MAJOR AI COMPANY F**KUP" sign as a PNG.
 
 Usage:
     python render_sign.py --days 12 --record 47 --last "2026-01-08 · xAI" \
@@ -196,7 +196,7 @@ def render(days: int, *, record: int | None = None, last: str | None = None,
     d.text(((W - nw) / 2, by0 + (box_h - nh) / 2 - nb[1]), num, font=f_num, fill=accent)
 
     # main line
-    prefix = "DAYS SINCE THE LAST MAJOR AI LAB "
+    prefix = "DAYS SINCE THE LAST MAJOR AI COMPANY "
     f_main = fit(d, (prefix + noun_sign).replace(BAR, "UC"), "Anton-Regular.ttf", W - 200, 92, min_size=48)
     draw_censored(d, W / 2, 590, prefix + noun_sign, f_main, BLACK, anchor="m")
 

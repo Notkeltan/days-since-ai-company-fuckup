@@ -18,7 +18,7 @@ import yaml
 HERE = Path(__file__).resolve().parent.parent
 INCIDENTS = HERE / "incidents.yaml"
 
-LABELS = {"Date": "date", "Lab": "lab", "Tier": "tier", "Category": "category", "Tone": "tone",
+LABELS = {"Date": "date", "Company": "company", "Tier": "tier", "Category": "category", "Tone": "tone",
           "Title": "title", "Detail": "detail", "Source URL": "source", "Confidence": "confidence"}
 
 
@@ -28,7 +28,7 @@ def parse(body: str) -> dict:
         label, value = m.group(1).strip(), m.group(2).strip()
         if label in LABELS and value and value != "_No response_":
             fields[LABELS[label]] = value
-    missing = [k for k in ("date", "lab", "tier", "category", "title", "detail", "source") if k not in fields]
+    missing = [k for k in ("date", "company", "tier", "category", "title", "detail", "source") if k not in fields]
     if missing:
         sys.exit(f"missing fields: {missing}")
     if date.fromisoformat(fields["date"]) > date.today():
@@ -39,8 +39,8 @@ def parse(body: str) -> dict:
     return fields
 
 
-def slug(lab: str, title: str, d: str) -> str:
-    base = re.sub(r"[^a-z0-9]+", "-", f"{lab} {title}".lower()).strip("-")
+def slug(company: str, title: str, d: str) -> str:
+    base = re.sub(r"[^a-z0-9]+", "-", f"{company} {title}".lower()).strip("-")
     if len(base) > 48:
         base = base[:48].rsplit("-", 1)[0]
     existing = {i["id"] for i in yaml.safe_load(INCIDENTS.read_text(encoding="utf-8"))["incidents"]}
@@ -60,9 +60,9 @@ def main() -> None:
     body = Path(sys.argv[1]).read_text(encoding="utf-8")
     f = parse(body)
     entry = (
-        f"\n  - id: {slug(f['lab'], f['title'], f['date'])}\n"
+        f"\n  - id: {slug(f['company'], f['title'], f['date'])}\n"
         f"    date: {f['date']}\n"
-        f"    lab: {q(f['lab'])}\n"
+        f"    company: {q(f['company'])}\n"
         f"    category: {f['category']}\n"
         f"    tier: {f['tier']}\n"
         f"    resets: {'true' if f['tier'] == 1 else 'false'}\n"
