@@ -8,11 +8,12 @@
 
 What it does
 ------------
-Asks Claude Opus 5, at max reasoning effort with web search and web fetch, to
-sweep for things a frontier AI company has had to apologise for since the last
-entry in incidents.yaml. It is told to work like a desk editor, not a headline
-reader: several classes of source, corroboration before belief, and an explicit
-distinction between "one outlet reported it" and "it is established".
+Feeds Claude Opus 5 the last few days of MIRI's AI StopWatch daily digest and
+asks which items, if any, clear this counter's rubric. The digest is the source
+of candidates; the model follows the links in it to read the primary documents,
+because the digest's prose is reporting, not evidence. No web search - a curated
+feed plus link-following is both better sourced and vastly cheaper than a blind
+sweep.
 
 Whatever it returns is then put through `qualifies()` here in Python. The model
 recommends; this file decides. A finding only reaches incidents.yaml if it
@@ -26,8 +27,9 @@ ANTHROPIC_API_KEY     required
 DETECTOR_MODE         auto (default) | review
                       review sends every finding to out/review.json instead of
                       appending, even ones that clear the bar.
-DETECTOR_EFFORT       max (default) | xhigh | high | medium | low
-DETECTOR_LOOKBACK     days of history to search (default 14)
+DETECTOR_EFFORT       high (default) | max | xhigh | medium | low
+DETECTOR_LOOKBACK     days of digest to read (default 3)
+DIGEST_FEED           the AI StopWatch daily-digest RSS feed
 """
 from __future__ import annotations
 
@@ -37,6 +39,8 @@ import os
 import re
 import sys
 from datetime import date, datetime, timedelta
+from email.utils import parsedate_to_datetime
+from html import unescape
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -50,8 +54,9 @@ TZ = ZoneInfo(os.environ.get("COUNTER_TZ", "Australia/Sydney"))
 # `or` rather than a get() default: an unset repo variable arrives from Actions
 # as an empty string, not as an absent key, so a default would never apply.
 MODE = os.environ.get("DETECTOR_MODE") or "auto"
-EFFORT = os.environ.get("DETECTOR_EFFORT") or "max"
-LOOKBACK = int(os.environ.get("DETECTOR_LOOKBACK") or 14)
+EFFORT = os.environ.get("DETECTOR_EFFORT") or "high"
+LOOKBACK = int(os.environ.get("DETECTOR_LOOKBACK") or 3)
+DIGEST_FEED = os.environ.get("DIGEST_FEED") or "https://aistop.watch/feed?sectionId=380361"
 
 if MODE not in ("auto", "review"):
     sys.exit(f"DETECTOR_MODE must be auto or review, got {MODE!r}")
@@ -104,21 +109,24 @@ NEVER COUNTS
 - Anything you could not source.
 
 HOW TO WORK
-Do not stop at what the news is carrying. Headlines lag, repeat each other, and
-one outlet's mistake becomes five outlets' mistake within a day. Search several
-different kinds of source and treat agreement between independent kinds as the
-thing that makes a story real:
-  - the company's own newsroom, blog, status page, changelog, threat-intel and
-    incident write-ups - the strongest source there is, and often the only place
-    a disclosure appears
-  - regulators and enforcement: FTC, state attorneys general, Ofcom, the EU AI
-    Office, data-protection authorities
-  - security researchers and disclosure trackers publishing primary findings
-  - technical press and wire services
-  - practitioner communities where problems surface first: Hacker News, the
-    relevant subreddits, researchers posting directly
-Search each company by name against the current window, and search the window
-generically too, so you are not only finding what you thought to look for.
+Your input is the AI StopWatch daily digest, a newsroom run by analysts at the
+Machine Intelligence Research Institute. Read every dispatch given to you in
+full. It is a curated feed, not a search result: assume the editors already
+judged these items worth writing up, and that your job is the different one of
+deciding which of them clear this counter's rubric.
+
+Two things follow from the source being curated. First, the digest has a point
+of view - it is written by people who think this technology is dangerous. Your
+rubric does not change because of that. An item written up with alarm can still
+be a capability announcement, a lawsuit, or a company outside scope, and you
+should say so. Second, the digest's prose is not a source. Follow the links it
+gives and read the primary document before you call something acknowledged or
+corroborated - a company's own report, a regulator's notice, an independent
+investigator's postmortem. Quote what that document actually says, not what the
+digest says about it.
+
+If a dispatch describes something serious but you cannot reach a primary source
+for it, that is a hold, not a rejection.
 
 WHAT COUNTS AS CORROBORATED
 Two outlets rewriting the same wire story are ONE source. Independence means
@@ -150,8 +158,9 @@ but cannot yet stand up, and say what would confirm it. Returning nothing is a
 perfectly good answer and most days it is the right one."""
 
 TOOLS = [
-    {"type": "web_search_20260209", "name": "web_search"},
-    {"type": "web_fetch_20260209", "name": "web_fetch"},
+    # No web_search. The digest is the source; web_fetch is only for reading the
+    # primary documents it links to, which is what the evidence bar needs.
+    {"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": 25},
     {
         "name": "submit_findings",
         "description": "Report the sweep's results. Call exactly once, at the end, "
@@ -246,19 +255,72 @@ def known(data: dict) -> tuple[set[str], date]:
     return ids, max(dates)
 
 
-def brief(data: dict, today: date) -> str:
-    """What the account already knows, so the model doesn't re-report it."""
-    recent = sorted(data["incidents"],
-                    key=lambda i: str(i["date"]))[-25:]
+def fetch_digest(today: date) -> str:
+    """The AI StopWatch daily digest, as plain text with its links preserved."""
+    if "://" not in DIGEST_FEED or DIGEST_FEED.startswith("file://"):
+        xml = Path(DIGEST_FEED.replace("file://", "")).read_text(encoding="utf-8", errors="replace")
+    else:
+        import requests
+        r = requests.get(DIGEST_FEED, timeout=60,
+                         headers={"User-Agent": "days-since-counter (github.com/Notkeltan)"})
+        r.raise_for_status()
+        xml = r.text
+    return parse_digest(xml, today)
+
+
+def parse_digest(xml: str, today: date) -> str:
+    cutoff = today - timedelta(days=LOOKBACK)
+    out = []
+    for raw in re.findall(r"<item>(.*?)</item>", xml, re.S):
+        def field(tag: str) -> str:
+            m = re.search(rf"<{tag}>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</{tag}>", raw, re.S)
+            return m.group(1) if m else ""
+        try:
+            pub = parsedate_to_datetime(field("pubDate")).date()
+        except (TypeError, ValueError):
+            continue
+        if pub < cutoff:
+            continue
+        body = field("content:encoded") or field("description")
+        # Keep hrefs - the whole point is to follow them to a primary source.
+        # Square brackets, not angle: the tag stripper below eats anything in <>.
+        body = re.sub(r'<a\s[^>]*href="([^"]+)"[^>]*>(.*?)</a>', r"\2 [\1]", body, flags=re.S)
+        # Image CDNs and licence boilerplate are never a source and each URL is
+        # ~150 characters of noise the model has to read past.
+        body = re.sub(r"\[https?://[^\]]*(?:substackcdn\.com|creativecommons\.org|/image/fetch/)[^\]]*\]",
+                      "", body)
+        body = re.sub(r"<(p|div|h[1-6]|li|br)[^>]*>", "\n", body)
+        body = unescape(re.sub(r"<[^>]+>", "", body))
+        body = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+", " ", body)).strip()
+        out.append(f"===== DISPATCH {pub.isoformat()} - {unescape(field('title'))} =====\n\n{body}")
+
+    if not out:
+        raise RuntimeError(f"no digest dispatches since {cutoff}; has the feed moved?")
+    return "\n\n".join(reversed(out))
+
+
+def brief(data: dict, today: date, digest: str) -> str:
+    """What the account already knows, plus the digest to judge."""
+    recent = sorted(data["incidents"], key=lambda i: str(i["date"]))[-25:]
     lines = [f"  {i['date']}  tier {i['tier']}  {i['company']}: {i['title']}" for i in recent]
-    return (f"Today is {today.isoformat()}.\n\n"
-            f"Report only incidents whose FIRST public disclosure falls between "
-            f"{(today - timedelta(days=LOOKBACK)).isoformat()} and {today.isoformat()}. "
-            f"Something that first surfaced before that window is old news, even if it is "
-            f"being widely covered today.\n\n"
-            f"Already logged, most recent {len(recent)} of {len(data['incidents'])} entries - "
-            f"do not report these again, and do not report a fresh angle on one of them as "
-            f"a new incident:\n" + "\n".join(lines))
+    return (
+        f"Today is {today.isoformat()}.\n\n"
+        f"Report only incidents whose FIRST public disclosure falls between "
+        f"{(today - timedelta(days=LOOKBACK)).isoformat()} and {today.isoformat()}. "
+        f"Something that first surfaced before that window is old news, even if it is "
+        f"being written about today.\n\n"
+        f"ALREADY LOGGED - the most recent {len(recent)} of {len(data['incidents'])} entries:\n"
+        + "\n".join(lines) +
+        "\n\nDo not report the same disclosure twice. But a later disclosure about an "
+        "incident already on this list IS a new incident when it discloses something "
+        "materially new in its own right - a postmortem showing the thing was far worse "
+        "or wider than was known, or a company admitting a safeguard or process failure "
+        "that was not part of the original story. Judge the new document on its own "
+        "merits and date it to its own first disclosure. Do not wave something away as "
+        "\"a fresh angle on an existing entry\" when the company has just admitted "
+        "something new about itself.\n\n"
+        "THE DIGEST FOLLOWS. Everything below is the source material.\n\n" + digest
+    )
 
 
 def slug(company: str, title: str, existing: set[str]) -> str:
@@ -395,7 +457,7 @@ def main() -> None:
     if a.replay:
         result = json.loads(Path(a.replay).read_text(encoding="utf-8"))
     else:
-        result = research(brief(data, today))
+        result = research(brief(data, today, fetch_digest(today)))
         (OUT / "detection.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
 
     print(f"sweep notes: {result.get('sweep_notes', '')}\n")

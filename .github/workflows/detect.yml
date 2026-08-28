@@ -43,6 +43,7 @@ jobs:
           DETECTOR_MODE: ${{ vars.DETECTOR_MODE }}
           DETECTOR_EFFORT: ${{ vars.DETECTOR_EFFORT }}
           DETECTOR_LOOKBACK: ${{ vars.DETECTOR_LOOKBACK }}
+          DIGEST_FEED: ${{ vars.DIGEST_FEED }}
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             python detect.py --dry-run | tee /tmp/sweep.txt
