@@ -197,6 +197,34 @@ feed, or `python detect.py --replay findings.json --dry-run` to run the whole
 decision path over a saved response. Each real sweep's full response is kept as
 a workflow artifact for 90 days.
 
+## Knowing when it breaks
+
+GitHub emails on a failed workflow, which covers the easy case. It cannot tell
+you about the failure this account actually keeps hitting: a cron that never
+fires produces no run, no error and no email. So the alerting is built around
+silence rather than errors.
+
+`watchdog.yml` runs at 14:00 and 20:00 Newcastle time - after the last posting
+retry, so a merely late run is not a false alarm - and asks one question: does
+`state.json` say the counter posted today? If not, it pushes to keltan's phone
+via Pushover, with the run link attached. `daily.yml` and `detect.yml` also push
+on failure.
+
+Needs two secrets, `PUSHOVER_TOKEN` and `PUSHOVER_USER`. Without them
+`scripts/alert.sh` prints what it would have sent and exits cleanly, so nothing
+breaks for want of an account. The optional `PUSHOVER_SOUND` repo variable picks
+the alert sound - the point is a sound nothing else on the phone uses, so it is
+recognisable before the screen is even read. Test the whole path end to end with
+Actions -> watchdog -> Run workflow -> tick `test`.
+
+**The honest limit:** the watchdog is itself a GitHub cron, so it cannot alert
+you about GitHub being wholly down. It catches a dropped posting cron, a broken
+poster, a dead API key and an empty credit balance, because those leave the
+watchdog running while the counter is stuck. For true independence the pattern
+is a dead-man's switch hosted elsewhere - healthchecks.io free tier, pinged by
+the poster on success, alerting when the ping fails to arrive - which is worth
+adding if the counter ever matters enough.
+
 ## Adding an incident from your phone
 
 Open the repo in the GitHub app → Issues → New issue → **Log an incident**. Fill the form, submit. A workflow parses it into `incidents.yaml`, commits, closes the issue with the entry it wrote, and triggers a post run — so a Tier 1 entry becomes a reset post within a couple of minutes. Only issues opened by the repo owner are processed. If the parse fails (bad date, missing field) the bot comments on the issue and does nothing.

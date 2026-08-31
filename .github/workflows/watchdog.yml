@@ -1,0 +1,74 @@
+name: watchdog
+
+# The alert that matters. GitHub emails you when a workflow fails, but it cannot
+# tell you when a workflow never ran - and a dropped cron is the failure this
+# account has actually hit. This checks the only thing that counts: did the
+# counter post today?
+#
+# It runs after the daily post's last retry, so a late run is not a false alarm.
+
+on:
+  schedule:
+    - cron: "0 4 * * *"     # 14:00 AEST - an hour after the last posting retry
+    - cron: "0 10 * * *"    # 20:00 AEST - second look before the day is out
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "send a test alert and stop"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: test alert
+        if: github.event.inputs.test == 'true'
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_SOUND: ${{ vars.PUSHOVER_SOUND }}
+        run: |
+          bash scripts/alert.sh "Counter test alert" \
+            "If you can see this, the watchdog can reach your phone. Nothing is wrong." 0
+          echo "test only; stopping here"
+
+      - name: has it posted today?
+        if: github.event.inputs.test != 'true'
+        id: check
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          from datetime import date, datetime
+          from zoneinfo import ZoneInfo
+
+          today = datetime.now(ZoneInfo("Australia/Sydney")).date()
+          try:
+              last = date.fromisoformat(json.load(open("state.json"))["last_post_date"])
+          except Exception as e:
+              print(f"stale=true"); print(f"detail=state.json unreadable: {e}"); raise SystemExit
+
+          behind = (today - last).days
+          print(f"stale={'true' if behind >= 1 else 'false'}")
+          print(f"detail=last posted {last} ({behind} day(s) ago); today is {today}")
+          PY
+
+      - name: alert if the counter has gone quiet
+        if: steps.check.outputs.stale == 'true'
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_SOUND: ${{ vars.PUSHOVER_SOUND }}
+        run: |
+          bash scripts/alert.sh "Counter has not posted" \
+            "${{ steps.check.outputs.detail }}. Every posting retry for today has been and gone." \
+            1 "${{ github.server_url }}/${{ github.repository }}/actions"
+
+      - name: say so in the log when all is well
+        if: steps.check.outputs.stale == 'false'
+        run: echo "OK - ${{ steps.check.outputs.detail }}"

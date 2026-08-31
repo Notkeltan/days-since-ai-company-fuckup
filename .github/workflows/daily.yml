@@ -71,3 +71,15 @@ jobs:
           # the detector pushes to the same branch; rebase rather than fail
           git pull --rebase --autostash
           git push
+      - name: alert on failure
+        if: failure()
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_SOUND: ${{ vars.PUSHOVER_SOUND }}
+        run: |
+          bash scripts/alert.sh \
+            "Counter failed to post" \
+            "The daily post errored. The counter will look frozen until this is fixed." \
+            1 "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+

@@ -111,3 +111,15 @@ jobs:
         run: |
           gh issue create --title "detector failed $(date -u +%F)" --label needs-review \
             --body "The sweep errored: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} . The counter still posts; it just is not watching until this is fixed."
+      - name: alert on failure
+        if: failure()
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_SOUND: ${{ vars.PUSHOVER_SOUND }}
+        run: |
+          bash scripts/alert.sh \
+            "Detector failed" \
+            "The sweep errored. The counter still posts, it just is not watching." \
+            1 "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
