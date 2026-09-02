@@ -60,12 +60,16 @@ jobs:
               python post.py
             fi
           fi
+      - name: rebuild the public site
+        if: github.event.inputs.dry_run != 'true'
+        run: python build_site.py
+
       - name: commit state
         if: github.event.inputs.dry_run != 'true'
         run: |
           git config user.name "counter-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add state.json out/*.png || true
+          git add state.json out/*.png site || true
           git diff --cached --quiet && { echo "no state change"; exit 0; }
           git commit -m "state: $(date -u +%F)"
           # the detector pushes to the same branch; rebase rather than fail

@@ -469,15 +469,16 @@ incidents:
     confidence: low
 
   # Candidates I looked at and left OUT (your call):
-  #   - 2026-02-11 WSJ: OpenAI fired a safety executive who had opposed adult mode — named
-  #     individual, contested reason; defamation-shaped. Verify before touching.
+  #   - a 2026-02 personnel story: turns on an identifiable individual and a
+  #     contested account of why they left. Not documented well enough to touch,
+  #     and the rubric does not count departures without a stated safety reason.
   #   - 2026-05 Google's compute-based Gemini usage caps backlash — pricing, not safety.
   #   - 2026-05-21 "Gemini deleted 30k lines and faked a post-mortem" — one Reddit post,
   #     traced to a third-party npm package's rules.
   #   - 2026-08-19 OpenAI accidentally revoked researchers' cyber-program access — minor.
   # Feb–May 2026 looks thin (one Jan→Jun gap of ~150 days) — probably my search, not the companies.
   # ─────────────────────────────────────────────────────────────────────────
-  # ADD 2026-02 → today HERE. Claude has no knowledge past ~Jan 2026.
+  # Entries below here are appended by detect.py, or by the issue form.
   # ─────────────────────────────────────────────────────────────────────────
 
   - id: openai-openai-postmortem-700-of-its-agents
