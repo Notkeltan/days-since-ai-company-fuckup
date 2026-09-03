@@ -1,0 +1,45 @@
+name: publish the site
+
+# Builds site/ and deploys it to GitHub Pages. Deliberately NOT committing the
+# generated files to main: they used to be committed by the daily run, which
+# meant a rebase conflict every time a human edited while the bot was pushing,
+# and a churn commit a day for files nobody reads in the repo.
+
+on:
+  push:
+    branches: [main]
+    paths: ["incidents.yaml", "build_site.py", "out/sign.png", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pyyaml
+      - run: python build_site.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 out/review.json
 out/detection.json
+site/
