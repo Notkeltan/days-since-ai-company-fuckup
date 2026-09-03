@@ -43,5 +43,56 @@
   "resets_seen": [
     "openai-openai-postmortem-700-of-its-agents"
   ],
-  "record_announced_for": null
+  "record_announced_for": null,
+  "posts": {
+    "by_date": {
+      "2026-08-27": {
+        "kind": "daily",
+        "id": "2092808281307910232",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-08-28": {
+        "kind": "reset",
+        "id": "2093208293980443134",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-08-29": {
+        "kind": "daily",
+        "id": "2093351357201645944",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-08-30": {
+        "kind": "daily",
+        "id": "2093849571210219928",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-08-31": {
+        "kind": "daily",
+        "id": "2094216706155819287",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-09-01": {
+        "kind": "daily",
+        "id": "2094590979328135231",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-09-02": {
+        "kind": "daily",
+        "id": "2094935481972900194",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-09-03": {
+        "kind": "daily",
+        "id": "2095298715418538402",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      }
+    },
+    "by_incident": {
+      "openai-openai-postmortem-700-of-its-agents": {
+        "kind": "reset",
+        "id": "2093208293980443134",
+        "date": "2026-08-28"
+      }
+    }
+  }
 }

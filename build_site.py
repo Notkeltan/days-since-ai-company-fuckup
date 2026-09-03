@@ -38,7 +38,7 @@ STATE = HERE / "state.json"
 # Explicit constants, not derived. min(by_date) would report the account as
 # having started on the day URL capture started, which is three days late.
 POSTING_SINCE = "2026-08-27"    # first day the account posted at all
-CAPTURE_SINCE = "2026-09-03"    # first day each post's address was recorded
+CAPTURE_SINCE = "2026-08-27"    # capture is automatic from 2026-09-03; earlier days were backfilled from the public timeline
 REPO = "https://github.com/Notkeltan/days-since-ai-company-fuckup"
 HANDLE = "@xRiskMemes"
 # Custom domain for GitHub Pages, from the PAGES_DOMAIN repo variable.
