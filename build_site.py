@@ -373,8 +373,7 @@ def main() -> None:
         day = date.fromordinal(day.toordinal() + 1)
     (SITE / "history.csv").write_text(buf.getvalue(), encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
-    (SITE / "CNAME").write_text(DOMAIN + "
-", encoding="utf-8")
+    (SITE / "CNAME").write_text(DOMAIN + "\n", encoding="utf-8")
 
     sign = HERE / "out" / "sign.png"
     if sign.exists():
