@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import io
 import json
 from datetime import date, datetime, timezone
@@ -34,9 +35,15 @@ HERE = Path(__file__).resolve().parent
 SITE = HERE / "site"
 REPO = "https://github.com/Notkeltan/days-since-ai-company-fuckup"
 HANDLE = "@xRiskMemes"
-# Custom domain for GitHub Pages. Written to site/CNAME on every build,
-# because Pages drops the setting whenever the artifact lacks the file.
-DOMAIN = "dayssince.keltan.net"
+# Custom domain for GitHub Pages, from the PAGES_DOMAIN repo variable.
+#
+# Deliberately opt-in and empty by default. A CNAME file in the artifact SETS
+# the custom domain, and Pages then redirects the github.io URL to it - so
+# shipping one before DNS resolves takes the live site down. Set the variable
+# only once the DNS record actually answers.
+DOMAIN = os.environ.get("PAGES_DOMAIN", "").strip()
+SITE_URL = (f"https://{DOMAIN}" if DOMAIN
+            else "https://notkeltan.github.io/days-since-ai-company-fuckup")
 
 SCHEMA = 1
 
@@ -254,7 +261,7 @@ def page(d: dict) -> str:
     <tr><td><a href="data.json">data.json</a></td><td>Every entry since {e(d["coverage"]["earliest"])}, streaks, per-company totals. Complete history, never a rolling window.</td></tr>
     <tr><td><a href="sign.png">sign.png</a></td><td>Today's sign image, as posted.</td></tr>
   </table></div>
-  <pre>curl -s https://{e(DOMAIN)}/current.json</pre>
+  <pre>curl -s {e(SITE_URL)}/current.json</pre>
   <p>Fields are documented in the repo. <code>schema</code> is versioned; it goes up
      if a field's meaning changes, never silently.</p>
 
@@ -373,7 +380,8 @@ def main() -> None:
         day = date.fromordinal(day.toordinal() + 1)
     (SITE / "history.csv").write_text(buf.getvalue(), encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
-    (SITE / "CNAME").write_text(DOMAIN + "\n", encoding="utf-8")
+    if DOMAIN:
+        (SITE / "CNAME").write_text(DOMAIN + "\n", encoding="utf-8")
 
     sign = HERE / "out" / "sign.png"
     if sign.exists():

@@ -29,6 +29,8 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install pyyaml
       - run: python build_site.py
+        env:
+          PAGES_DOMAIN: ${{ vars.PAGES_DOMAIN }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
