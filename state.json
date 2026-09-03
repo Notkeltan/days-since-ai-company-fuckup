@@ -1,6 +1,6 @@
 {
   "last_incident_id": "openai-openai-postmortem-700-of-its-agents",
-  "last_post_date": "2026-09-03",
+  "last_post_date": "2026-09-04",
   "known_ids": [
     "anthropic-books-settlement",
     "anthropic-claude-code-ab-test",
@@ -84,6 +84,11 @@
       "2026-09-03": {
         "kind": "daily",
         "id": "2095298715418538402",
+        "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-09-04": {
+        "kind": "daily",
+        "id": "2095659881051091100",
         "incident": "openai-openai-postmortem-700-of-its-agents"
       }
     },
