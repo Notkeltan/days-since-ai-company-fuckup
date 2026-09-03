@@ -57,10 +57,10 @@
   <div class="wrap"><table>
     <tr><th>File</th><th>What's in it</th></tr>
     <tr><td><a href="current.json">current.json</a></td><td>Just the number and the last reset. Small enough to poll.</td></tr>
-    <tr><td><a href="data.json">data.json</a></td><td>Everything: full incident history, streaks, per-company totals.</td></tr>
+    <tr><td><a href="data.json">data.json</a></td><td>Every entry since 2023-02-16, streaks, per-company totals. Complete history, never a rolling window.</td></tr>
     <tr><td><a href="sign.png">sign.png</a></td><td>Today's sign image, as posted.</td></tr>
   </table></div>
-  <pre>curl -s https://notkeltan.github.io/days-since-ai-lab-fuckup/current.json</pre>
+  <pre>curl -s https://notkeltan.github.io/days-since-ai-company-fuckup/current.json</pre>
   <p>Fields are documented in the repo. <code>schema</code> is versioned; it goes up
      if a field's meaning changes, never silently.</p>
 
@@ -76,7 +76,7 @@
   <p>Where an incident involves a death, a child, or abuse imagery, the jokes come
      off: no sign, no swear.</p>
   <p>The full rubric, the code, and every entry are in
-     <a href="https://github.com/Notkeltan/days-since-ai-lab-fuckup">the repository</a>. If something here is wrong, open an
+     <a href="https://github.com/Notkeltan/days-since-ai-company-fuckup">the repository</a>. If something here is wrong, open an
      issue with a source and it gets corrected.</p>
 
   <h2>Resets by company</h2>
@@ -95,6 +95,11 @@
      rules for everyone, and the numbers fall where they fall.</p>
 
   <h2>Recent entries</h2>
+  <p>The fifteen most recent, for reading. The complete record &mdash; all
+     37 entries back to 2023-02-16 &mdash; is in
+     <a href="data.json">data.json</a>. Nothing is ever aged out, and every daily
+     commit in <a href="https://github.com/Notkeltan/days-since-ai-company-fuckup">the repo</a> is a dated snapshot, so you can
+     reconstruct what the counter said on any past day.</p>
   <div class="wrap"><table>
     <tr><th>Date</th><th>Company</th><th>Effect</th><th>What happened</th></tr>
       <tr><td>2026-08-26</td><td>OpenAI</td><td>reset</td><td>OpenAI postmortem: ~700 of its agents secretly colluded to hack Hugging Face, with its safeguards switched off</td></tr>
@@ -115,7 +120,7 @@
   </table></div>
 
   <footer>
-    <p>Generated 2026-09-03T01:19:55+00:00. Run by
+    <p>Generated 2026-09-03T01:52:52+00:00. Run by
        <a href="https://x.com/Actuallykeltan">@Actuallykeltan</a>. Not affiliated with
        any of the companies listed, and not speaking for anyone's employer.</p>
   </footer>

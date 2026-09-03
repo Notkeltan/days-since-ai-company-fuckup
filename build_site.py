@@ -30,7 +30,7 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 SITE = HERE / "site"
-REPO = "https://github.com/Notkeltan/days-since-ai-lab-fuckup"
+REPO = "https://github.com/Notkeltan/days-since-ai-company-fuckup"
 HANDLE = "@xRiskMemes"
 
 SCHEMA = 1
@@ -83,6 +83,17 @@ def load(today: date) -> dict:
             "incidents": len(incidents),
             "resets": len(resets),
             "resets_by_company": dict(sorted(by_company.items(), key=lambda kv: -kv[1])),
+        },
+        # Stated explicitly because plenty of trackers quietly serve a rolling
+        # window. This is every entry there has ever been, and nothing in this
+        # file prunes by age. Each daily commit is also a dated snapshot, so the
+        # git history reconstructs what the counter said on any past day.
+        "coverage": {
+            "complete": True,
+            "rolling_window": False,
+            "earliest": incidents[0]["date"] if incidents else None,
+            "latest": incidents[-1]["date"] if incidents else None,
+            "note": "Full history since the first logged entry. Nothing is aged out.",
         },
         "incidents": incidents,
         "licence": "CC0-1.0. Use it for anything. A link back is welcome, not required.",
@@ -162,7 +173,7 @@ def page(d: dict) -> str:
   <div class="wrap"><table>
     <tr><th>File</th><th>What's in it</th></tr>
     <tr><td><a href="current.json">current.json</a></td><td>Just the number and the last reset. Small enough to poll.</td></tr>
-    <tr><td><a href="data.json">data.json</a></td><td>Everything: full incident history, streaks, per-company totals.</td></tr>
+    <tr><td><a href="data.json">data.json</a></td><td>Every entry since {e(d["coverage"]["earliest"])}, streaks, per-company totals. Complete history, never a rolling window.</td></tr>
     <tr><td><a href="sign.png">sign.png</a></td><td>Today's sign image, as posted.</td></tr>
   </table></div>
   <pre>curl -s {e(REPO.replace("github.com/Notkeltan", "notkeltan.github.io").replace("https://github.com/", "https://"))}/current.json</pre>
@@ -194,6 +205,11 @@ def page(d: dict) -> str:
      rules for everyone, and the numbers fall where they fall.</p>
 
   <h2>Recent entries</h2>
+  <p>The fifteen most recent, for reading. The complete record &mdash; all
+     {d["totals"]["incidents"]} entries back to {e(d["coverage"]["earliest"])} &mdash; is in
+     <a href="data.json">data.json</a>. Nothing is ever aged out, and every daily
+     commit in <a href="{e(REPO)}">the repo</a> is a dated snapshot, so you can
+     reconstruct what the counter said on any past day.</p>
   <div class="wrap"><table>
     <tr><th>Date</th><th>Company</th><th>Effect</th><th>What happened</th></tr>
 {rows}

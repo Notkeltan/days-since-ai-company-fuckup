@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-03T01:19:55+00:00",
+  "generated_at": "2026-09-03T01:52:52+00:00",
   "as_of": "2026-09-03",
   "days_since_last_reset": 8,
   "last_reset": {
@@ -40,6 +40,13 @@
       "Microsoft": 1,
       "DeepSeek": 1
     }
+  },
+  "coverage": {
+    "complete": true,
+    "rolling_window": false,
+    "earliest": "2023-02-16",
+    "latest": "2026-08-26",
+    "note": "Full history since the first logged entry. Nothing is aged out."
   },
   "incidents": [
     {
@@ -656,5 +663,5 @@
     }
   ],
   "licence": "CC0-1.0. Use it for anything. A link back is welcome, not required.",
-  "source_repo": "https://github.com/Notkeltan/days-since-ai-lab-fuckup"
+  "source_repo": "https://github.com/Notkeltan/days-since-ai-company-fuckup"
 }
