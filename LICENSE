@@ -1,0 +1,33 @@
+Days Since The Last Major AI Company F**kup
+Copyright (c) 2026 keltan
+
+Licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported
+licence (CC BY-SA 3.0) - the same licence the SCP Wiki uses, which is where
+this project borrowed its object classes from.
+
+    Human-readable summary:  https://creativecommons.org/licenses/by-sa/3.0/
+    Full legal code:         https://creativecommons.org/licenses/by-sa/3.0/legalcode
+
+You are free to share and adapt this material, including commercially, provided
+that you:
+
+  ATTRIBUTION    Credit "Days Since The Last Major AI Company F**kup" by keltan,
+                 link back to https://github.com/Notkeltan/days-since-ai-company-fuckup,
+                 and say if you changed anything.
+
+  SHARE-ALIKE    If you remix or build on it, distribute your version under this
+                 same licence.
+
+This covers the incident data, the site, the sign artwork and the code.
+
+Not covered, because they are not this project's to license:
+
+  - The fonts in fonts/ are Anton and Oswald, licensed separately under the SIL
+    Open Font Licence. Their licences ship alongside them.
+  - Linked sources belong to whoever published them. The URLs are facts about
+    where a claim came from; the articles behind them are not included here.
+  - "SCP Foundation" and the object-class names are from the SCP Wiki
+    (https://scp-wiki.wikidot.com), also CC BY-SA 3.0. This project is not
+    affiliated with it.
+  - Company names and marks belong to their owners. Nothing here is endorsed by,
+    or speaks for, any of the companies it counts.

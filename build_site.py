@@ -34,8 +34,47 @@ HERE = Path(__file__).resolve().parent
 SITE = HERE / "site"
 REPO = "https://github.com/Notkeltan/days-since-ai-company-fuckup"
 HANDLE = "@xRiskMemes"
+# Custom domain for GitHub Pages. Written to site/CNAME on every build,
+# because Pages drops the setting whenever the artifact lacks the file.
+DOMAIN = "dayssince.keltan.net"
 
 SCHEMA = 1
+
+
+# ── SCP object classes ───────────────────────────────────────────────────────
+# Flavour, not rubric. Nothing here affects the counter; it is derived from
+# fields already in incidents.yaml so it is reproducible and argues with itself
+# the same way every time.
+#
+# The classes are about how hard a thing is to CONTAIN, not how dangerous it is,
+# which turns out to fit AI incidents almost too well. Safe does not mean
+# harmless - it means understood and reliably held.
+
+OBJECT_CLASSES = {
+    "Safe": "Understood and reliably contained. Not the same as harmless.",
+    "Euclid": "Insufficiently understood or inherently unpredictable; containment is not always reliable.",
+    "Keter": "Exceedingly difficult to contain consistently. Usually because it is already out.",
+    "Argus": "Contained by somebody other than the Foundation, who are deemed capable of it.",
+    "Pending": "Not enough information to classify yet.",
+    "Uncontained": "Not yet contained. Ongoing effort required to establish containment.",
+}
+
+
+def object_class(inc: dict, is_current: bool) -> str | None:
+    """First match wins. Returns None where a joke would be indecent."""
+    if inc["tone"] == "somber":
+        return None          # the account's own rule: no jokes over a body
+    if inc["confidence"] == "low":
+        return "Pending"
+    if inc["category"] == "legal":
+        return "Argus"       # the courts have this one
+    if is_current and inc["resets"]:
+        return "Uncontained"
+    if inc["tier"] == 2:
+        return "Safe"
+    if inc["category"] == "misuse":
+        return "Keter"       # third parties have the model; it cannot be recalled
+    return "Euclid"
 
 
 def load(today: date) -> dict:
@@ -75,6 +114,9 @@ def load(today: date) -> dict:
     ]
     record = max(streaks, key=lambda s: s["days"]) if streaks else None
 
+    for i in incidents:
+        i["object_class"] = object_class(i, i["id"] == latest["id"])
+
     by_id = {i["id"]: i for i in incidents}
     for s in streaks:
         by_id[s["ended_by"]]["ended_streak_days"] = s["days"]
@@ -103,6 +145,15 @@ def load(today: date) -> dict:
             "by_confidence": tally(incidents, lambda i: i["confidence"]),
         },
         "streaks": streaks,
+        "object_classes": {
+            "note": "Flavour only, derived from the fields above. It has no bearing on "
+                    "whether something resets the counter. Classes describe how hard a "
+                    "thing is to contain, not how bad it is. Incidents marked somber get "
+                    "no class - the account does not make jokes over those.",
+            "definitions": OBJECT_CLASSES,
+            "counts": tally([i for i in incidents if i["object_class"]],
+                            lambda i: i["object_class"]),
+        },
         # Stated explicitly because plenty of trackers quietly serve a rolling
         # window. This is every entry there has ever been, and nothing in this
         # file prunes by age. Each daily commit is also a dated snapshot, so the
@@ -115,7 +166,14 @@ def load(today: date) -> dict:
             "note": "Full history since the first logged entry. Nothing is aged out.",
         },
         "incidents": incidents,
-        "licence": "CC0-1.0. Use it for anything. A link back is welcome, not required.",
+        "licence": {
+            "id": "CC-BY-SA-3.0",
+            "url": "https://creativecommons.org/licenses/by-sa/3.0/",
+            "note": "Same licence as the SCP Wiki, which is where the object classes "
+                    "come from. Use it commercially if you like; credit the project, "
+                    "link back, and license what you build under the same terms.",
+            "attribution": "Days Since The Last Major AI Company F**kup by keltan",
+        },
         "source_repo": REPO,
     }
 
@@ -126,7 +184,8 @@ def page(d: dict) -> str:
     rec = d["longest_streak"]
     rows = "\n".join(
         f'      <tr><td>{e(i["date"])}</td><td>{e(i["company"])}</td>'
-        f'<td>{"reset" if i["resets"] else "logged"}</td><td>{e(i["title"])}</td></tr>'
+        f'<td>{"reset" if i["resets"] else "logged"}</td>'
+        f'<td>{e(i["object_class"] or "—")}</td><td>{e(i["title"])}</td></tr>'
         for i in reversed(d["incidents"][-15:])
     )
     table = "\n".join(
@@ -195,7 +254,7 @@ def page(d: dict) -> str:
     <tr><td><a href="data.json">data.json</a></td><td>Every entry since {e(d["coverage"]["earliest"])}, streaks, per-company totals. Complete history, never a rolling window.</td></tr>
     <tr><td><a href="sign.png">sign.png</a></td><td>Today's sign image, as posted.</td></tr>
   </table></div>
-  <pre>curl -s {e(REPO.replace("github.com/Notkeltan", "notkeltan.github.io").replace("https://github.com/", "https://"))}/current.json</pre>
+  <pre>curl -s https://{e(DOMAIN)}/current.json</pre>
   <p>Fields are documented in the repo. <code>schema</code> is versioned; it goes up
      if a field's meaning changes, never silently.</p>
 
@@ -223,6 +282,23 @@ def page(d: dict) -> str:
      across {d["totals"]["incidents"]} logged entries. The table is the point: same
      rules for everyone, and the numbers fall where they fall.</p>
 
+  <h2>Object classes</h2>
+  <p>Flavour, borrowed from the <a href="https://scp-wiki.wikidot.com/object-classes">SCP
+     Foundation</a> and derived mechanically from the fields above. It has no bearing on
+     whether something resets the counter. The classes describe how hard a thing is to
+     <em>contain</em>, not how bad it is &mdash; Safe does not mean harmless &mdash; which
+     turns out to fit this subject uncomfortably well. Incidents marked somber get no
+     class; the account does not make jokes over those.</p>
+  <div class="wrap"><table>
+    <tr><th>Class</th><th>Meaning</th></tr>
+    <tr><td><strong>Safe</strong></td><td>{e(OBJECT_CLASSES["Safe"])}</td></tr>
+    <tr><td><strong>Euclid</strong></td><td>{e(OBJECT_CLASSES["Euclid"])}</td></tr>
+    <tr><td><strong>Keter</strong></td><td>{e(OBJECT_CLASSES["Keter"])}</td></tr>
+    <tr><td><strong>Argus</strong></td><td>{e(OBJECT_CLASSES["Argus"])}</td></tr>
+    <tr><td><strong>Pending</strong></td><td>{e(OBJECT_CLASSES["Pending"])}</td></tr>
+    <tr><td><strong>Uncontained</strong></td><td>{e(OBJECT_CLASSES["Uncontained"])}</td></tr>
+  </table></div>
+
   <h2>Recent entries</h2>
   <p>The fifteen most recent, for reading. The complete record &mdash; all
      {d["totals"]["incidents"]} entries back to {e(d["coverage"]["earliest"])} &mdash; is in
@@ -230,11 +306,15 @@ def page(d: dict) -> str:
      commit in <a href="{e(REPO)}">the repo</a> is a dated snapshot, so you can
      reconstruct what the counter said on any past day.</p>
   <div class="wrap"><table>
-    <tr><th>Date</th><th>Company</th><th>Effect</th><th>What happened</th></tr>
+    <tr><th>Date</th><th>Company</th><th>Effect</th><th>Class</th><th>What happened</th></tr>
 {rows}
   </table></div>
 
   <footer>
+    <p><a href="{e(d["licence"]["url"])}">CC BY-SA 3.0</a> &mdash; the same licence as the
+       SCP Wiki. Take it, including commercially: credit
+       &ldquo;{e(d["licence"]["attribution"])}&rdquo;, link back, and license what you
+       build on it under the same terms.</p>
     <p>Generated {e(d["generated_at"])}. Run by
        <a href="https://x.com/Actuallykeltan">@Actuallykeltan</a>. Not affiliated with
        any of the companies listed, and not speaking for anyone's employer.</p>
@@ -293,6 +373,8 @@ def main() -> None:
         day = date.fromordinal(day.toordinal() + 1)
     (SITE / "history.csv").write_text(buf.getvalue(), encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
+    (SITE / "CNAME").write_text(DOMAIN + "
+", encoding="utf-8")
 
     sign = HERE / "out" / "sign.png"
     if sign.exists():
