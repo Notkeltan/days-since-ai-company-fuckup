@@ -81,6 +81,33 @@ OBJECT_CLASSES = {
 }
 
 
+# Only https, and nothing that could close an attribute or a tag. Escaping runs
+# first, so a raw quote cannot survive to reach here anyway - this is the second
+# lock, and it is what makes a javascript: URL impossible.
+SAFE_URL = re.compile(r"https://[^\s\"'<>]+")
+MD_LINK = re.compile(r"\[([^\]]+)\]\((https://[^)\s]+)\)|(?<![\"(>])(https://[^\s,)\]]+)")
+
+
+def render_about(text: str, e) -> str:
+    """keltan's statement, with its markdown links rendered as real anchors.
+
+    Escape the whole string FIRST, then build anchors. That ordering is the
+    point: no character of his text can introduce markup, and the only tags in
+    the output are the ones constructed here from URLs that had to match
+    SAFE_URL to get in. Bare URLs in the prose get linked too, which is where
+    the Substack post lives.
+    """
+    def sub(m):
+        if m.group(1):                       # [text](url)
+            label, url = m.group(1), m.group(2)
+        else:                                # a bare URL in the prose
+            label = url = m.group(3)
+        if not SAFE_URL.fullmatch(url):
+            return label
+        return f'<a href="{url}" rel="me noopener">{label}</a>'
+    return MD_LINK.sub(sub, e(text))
+
+
 def load_posts() -> dict:
     """Captured tweet ids from state.json. Cannot raise.
 
@@ -287,7 +314,7 @@ def page(d: dict) -> str:
     e = escape
     # Plain text for the blockquote: the markdown links in about-keltan.md are
     # already rendered as real anchors in the paragraph above it.
-    about = e(re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1", ABOUT))
+    about = render_about(ABOUT, e)
     ld = json.dumps({
         "@context": "https://schema.org",
         "@type": "Person",
@@ -354,7 +381,10 @@ def page(d: dict) -> str:
      without anyone editing the text, so anything naming him opts out of the
      uppercase transform entirely. assert_lowercase_keltan() fails the build if
      a heading ever names him without this. */
-  .name {{ text-transform:none; }}
+  /* Oswald, not Anton: Anton is an all-caps display face, so it rendered
+     ABOUT KELTAN even with the transform off. The font itself had to change. */
+  .name {{ text-transform:none; font-family:Oswald,system-ui,sans-serif;
+           font-weight:600; letter-spacing:.01em; font-size:1.5rem; }}
   .count {{ font-family:Anton,Impact,sans-serif; font-size:clamp(5rem,22vw,12rem);
             color:var(--red); line-height:.9; text-align:center;
             border:8px solid var(--red); background:#fff; padding:.1em .25em;
