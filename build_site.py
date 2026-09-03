@@ -21,6 +21,8 @@ are untrusted input as far as this file is concerned.
 from __future__ import annotations
 
 import argparse
+import csv
+import io
 import json
 from datetime import date, datetime, timezone
 from html import escape
@@ -51,7 +53,12 @@ def load(today: date) -> dict:
             "tone": i.get("tone", "snark"),
             "title": i["title"],
             "detail": i.get("detail", ""),
+            # Older entries cite by name ("NYT, 2024-07-04") rather than by URL.
+            # Both are kept: `sources` is what was recorded, `source_urls` is the
+            # subset you can actually follow.
             "sources": [s.strip() for s in str(i.get("source", "")).split(";") if s.strip()],
+            "source_urls": [s.strip() for s in str(i.get("source", "")).split(";")
+                            if s.strip().startswith("http")],
             "digest": i.get("digest", ""),
             "confidence": i.get("confidence", "high"),
         })
@@ -68,9 +75,15 @@ def load(today: date) -> dict:
     ]
     record = max(streaks, key=lambda s: s["days"]) if streaks else None
 
-    by_company: dict[str, int] = {}
-    for i in resets:
-        by_company[i["company"]] = by_company.get(i["company"], 0) + 1
+    by_id = {i["id"]: i for i in incidents}
+    for s in streaks:
+        by_id[s["ended_by"]]["ended_streak_days"] = s["days"]
+
+    def tally(items, key):
+        out: dict[str, int] = {}
+        for i in items:
+            out[key(i)] = out.get(key(i), 0) + 1
+        return dict(sorted(out.items(), key=lambda kv: -kv[1]))
 
     return {
         "schema": SCHEMA,
@@ -82,8 +95,14 @@ def load(today: date) -> dict:
         "totals": {
             "incidents": len(incidents),
             "resets": len(resets),
-            "resets_by_company": dict(sorted(by_company.items(), key=lambda kv: -kv[1])),
+            "resets_by_company": tally(resets, lambda i: i["company"]),
+            "incidents_by_company": tally(incidents, lambda i: i["company"]),
+            "by_category": tally(incidents, lambda i: i["category"]),
+            "by_tier": tally(incidents, lambda i: f"tier {i['tier']}"),
+            "by_year": tally(incidents, lambda i: i["date"][:4]),
+            "by_confidence": tally(incidents, lambda i: i["confidence"]),
         },
+        "streaks": streaks,
         # Stated explicitly because plenty of trackers quietly serve a rolling
         # window. This is every entry there has ever been, and nothing in this
         # file prunes by age. Each daily commit is also a dated snapshot, so the
@@ -244,6 +263,35 @@ def main() -> None:
         "source_repo": REPO,
     }, indent=2) + "\n", encoding="utf-8")
     (SITE / "index.html").write_text(page(d), encoding="utf-8")
+
+    # Flat CSV for the spreadsheet half of the world.
+    cols = ["id", "date", "company", "category", "tier", "resets", "tone",
+            "confidence", "ended_streak_days", "title", "detail", "digest", "sources"]
+    buf = io.StringIO()
+    w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore", lineterminator="\n")
+    w.writeheader()
+    for i in d["incidents"]:
+        row = dict(i)
+        row["sources"] = " | ".join(i["sources"])
+        w.writerow(row)
+    (SITE / "incidents.csv").write_text(buf.getvalue(), encoding="utf-8")
+
+    # The counter's value for every day it has ever had one. This is the series
+    # you would want to plot, and deriving it from resets is fiddly enough that
+    # publishing it saves everyone the same small piece of work.
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\n")
+    w.writerow(["date", "days_since_last_reset", "last_reset_id", "last_reset_company"])
+    resets = [i for i in d["incidents"] if i["resets"]]
+    start, cur = date.fromisoformat(resets[0]["date"]), today
+    day, idx = start, 0
+    while day <= cur:
+        while idx + 1 < len(resets) and date.fromisoformat(resets[idx + 1]["date"]) <= day:
+            idx += 1
+        w.writerow([day.isoformat(), (day - date.fromisoformat(resets[idx]["date"])).days,
+                    resets[idx]["id"], resets[idx]["company"]])
+        day = date.fromordinal(day.toordinal() + 1)
+    (SITE / "history.csv").write_text(buf.getvalue(), encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
 
     sign = HERE / "out" / "sign.png"

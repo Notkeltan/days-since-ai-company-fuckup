@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-03T01:52:52+00:00",
+  "generated_at": "2026-09-03T01:54:29+00:00",
   "as_of": "2026-09-03",
   "days_since_last_reset": 8,
   "last_reset": {
@@ -19,8 +19,15 @@
       "https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf",
       "https://x.com/RyanGreenblatt/status/2092692685224325542"
     ],
+    "source_urls": [
+      "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/",
+      "https://openai.com/index/hugging-face-incident-and-the-road-ahead/",
+      "https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf",
+      "https://x.com/RyanGreenblatt/status/2092692685224325542"
+    ],
     "digest": "https://aistop.watch/i/212929589/hugging-face-postmortems-reveal-further-ai-collusion",
-    "confidence": "high"
+    "confidence": "high",
+    "ended_streak_days": 27
   },
   "longest_streak": {
     "days": 242,
@@ -39,8 +46,175 @@
       "Google DeepMind": 2,
       "Microsoft": 1,
       "DeepSeek": 1
+    },
+    "incidents_by_company": {
+      "OpenAI": 14,
+      "xAI": 7,
+      "Anthropic": 7,
+      "Meta": 4,
+      "Google DeepMind": 3,
+      "Microsoft": 1,
+      "DeepSeek": 1
+    },
+    "by_category": {
+      "model_behaviour": 10,
+      "security_privacy": 9,
+      "safety_process": 5,
+      "governance": 4,
+      "legal": 4,
+      "deception": 4,
+      "misuse": 1
+    },
+    "by_tier": {
+      "tier 1": 23,
+      "tier 2": 14
+    },
+    "by_year": {
+      "2025": 16,
+      "2026": 11,
+      "2024": 7,
+      "2023": 3
+    },
+    "by_confidence": {
+      "high": 27,
+      "medium": 7,
+      "low": 3
     }
   },
+  "streaks": [
+    {
+      "days": 32,
+      "from": "2023-02-16",
+      "to": "2023-03-20",
+      "ended_by": "chatgpt-redis-leak"
+    },
+    {
+      "days": 242,
+      "from": "2023-03-20",
+      "to": "2023-11-17",
+      "ended_by": "openai-board-coup"
+    },
+    {
+      "days": 97,
+      "from": "2023-11-17",
+      "to": "2024-02-22",
+      "ended_by": "gemini-image-gen"
+    },
+    {
+      "days": 85,
+      "from": "2024-02-22",
+      "to": "2024-05-17",
+      "ended_by": "openai-superalignment-collapse"
+    },
+    {
+      "days": 6,
+      "from": "2024-05-17",
+      "to": "2024-05-23",
+      "ended_by": "google-ai-overviews-glue"
+    },
+    {
+      "days": 42,
+      "from": "2024-05-23",
+      "to": "2024-07-04",
+      "ended_by": "openai-2023-hack-undisclosed"
+    },
+    {
+      "days": 209,
+      "from": "2024-07-04",
+      "to": "2025-01-29",
+      "ended_by": "deepseek-open-database"
+    },
+    {
+      "days": 25,
+      "from": "2025-01-29",
+      "to": "2025-02-23",
+      "ended_by": "grok-censor-musk-trump"
+    },
+    {
+      "days": 65,
+      "from": "2025-02-23",
+      "to": "2025-04-29",
+      "ended_by": "gpt4o-sycophancy-rollback"
+    },
+    {
+      "days": 15,
+      "from": "2025-04-29",
+      "to": "2025-05-14",
+      "ended_by": "grok-white-genocide"
+    },
+    {
+      "days": 29,
+      "from": "2025-05-14",
+      "to": "2025-06-12",
+      "ended_by": "meta-ai-discover-feed"
+    },
+    {
+      "days": 26,
+      "from": "2025-06-12",
+      "to": "2025-07-08",
+      "ended_by": "grok-mechahitler"
+    },
+    {
+      "days": 23,
+      "from": "2025-07-08",
+      "to": "2025-07-31",
+      "ended_by": "chatgpt-shared-chats-indexed"
+    },
+    {
+      "days": 14,
+      "from": "2025-07-31",
+      "to": "2025-08-14",
+      "ended_by": "meta-ai-child-guidelines"
+    },
+    {
+      "days": 6,
+      "from": "2025-08-14",
+      "to": "2025-08-20",
+      "ended_by": "grok-chats-indexed"
+    },
+    {
+      "days": 85,
+      "from": "2025-08-20",
+      "to": "2025-11-13",
+      "ended_by": "anthropic-claude-espionage"
+    },
+    {
+      "days": 50,
+      "from": "2025-11-13",
+      "to": "2026-01-02",
+      "ended_by": "grok-undressing-images"
+    },
+    {
+      "days": 150,
+      "from": "2026-01-02",
+      "to": "2026-06-01",
+      "ended_by": "meta-support-bot-instagram-takeovers"
+    },
+    {
+      "days": 9,
+      "from": "2026-06-01",
+      "to": "2026-06-10",
+      "ended_by": "anthropic-fable5-invisible-sabotage"
+    },
+    {
+      "days": 41,
+      "from": "2026-06-10",
+      "to": "2026-07-21",
+      "ended_by": "openai-hugging-face-breakout"
+    },
+    {
+      "days": 9,
+      "from": "2026-07-21",
+      "to": "2026-07-30",
+      "ended_by": "anthropic-eval-unauthorized-access"
+    },
+    {
+      "days": 27,
+      "from": "2026-07-30",
+      "to": "2026-08-26",
+      "ended_by": "openai-openai-postmortem-700-of-its-agents"
+    }
+  ],
   "coverage": {
     "complete": true,
     "rolling_window": false,
@@ -63,6 +237,7 @@
         "NYT (Kevin Roose column, 2023-02-16)",
         "Microsoft blog on chat limits"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "high"
     },
@@ -79,8 +254,10 @@
       "sources": [
         "OpenAI incident post, 2023-03-24"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 32
     },
     {
       "id": "openai-board-coup",
@@ -96,8 +273,10 @@
         "OpenAI blog 2023-11-17",
         "reinstatement 2023-11-21"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 242
     },
     {
       "id": "gemini-image-gen",
@@ -113,8 +292,10 @@
         "Google blog 2024-02-23",
         "Pichai memo"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 97
     },
     {
       "id": "openai-superalignment-collapse",
@@ -130,8 +311,10 @@
         "Leike's X thread 2024-05-17",
         "Wired/Bloomberg on team dissolution"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 85
     },
     {
       "id": "openai-nda-clawback",
@@ -146,6 +329,7 @@
       "sources": [
         "Vox (Kelsey Piper), 2024-05-17 and 2024-05-22"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "high"
     },
@@ -162,6 +346,7 @@
       "sources": [
         "Johansson statement 2024-05-20"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "high"
     },
@@ -179,8 +364,10 @@
         "The Verge",
         "Google Search blog 2024-05-30"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 6
     },
     {
       "id": "openai-2023-hack-undisclosed",
@@ -195,8 +382,10 @@
       "sources": [
         "NYT, 2024-07-04"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 42
     },
     {
       "id": "gemini-please-die",
@@ -211,6 +400,7 @@
       "sources": [
         "CBS News, 2024-11"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "medium"
     },
@@ -227,8 +417,10 @@
       "sources": [
         "Wiz Research, 2025-01-29"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 209
     },
     {
       "id": "grok-censor-musk-trump",
@@ -244,8 +436,10 @@
         "The Verge",
         "xAI engineering lead Igor Babuschkin on X"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 25
     },
     {
       "id": "gpt4o-sycophancy-rollback",
@@ -260,8 +454,10 @@
       "sources": [
         "OpenAI 'Sycophancy in GPT-4o' post, 2025-04-29 and expanded post-mortem 2025-05-02"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 65
     },
     {
       "id": "grok-white-genocide",
@@ -276,8 +472,10 @@
       "sources": [
         "xAI statement on X, 2025-05-15"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 15
     },
     {
       "id": "anthropic-hallucinated-citation",
@@ -292,6 +490,7 @@
       "sources": [
         "Reuters, 2025-05-15"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "medium"
     },
@@ -309,8 +508,12 @@
         "TechCrunch, 2025-06-12",
         "https://www.cnbc.com/2025/06/13/meta-ai-app-turn-off-public-posting.html"
       ],
+      "source_urls": [
+        "https://www.cnbc.com/2025/06/13/meta-ai-app-turn-off-public-posting.html"
+      ],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 29
     },
     {
       "id": "grok-mechahitler",
@@ -326,8 +529,10 @@
         "Widely reported 2025-07-08\u201309",
         "xAI apology 2025-07-12"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 26
     },
     {
       "id": "chatgpt-shared-chats-indexed",
@@ -343,8 +548,10 @@
         "Fast Company",
         "OpenAI CISO on X, 2025-07-31/08-01"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 23
     },
     {
       "id": "grok-imagine-spicy",
@@ -359,6 +566,7 @@
       "sources": [
         "The Verge, 2025-08-05"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "medium"
     },
@@ -376,6 +584,7 @@
         "Livestream 2025-08-07",
         "Altman on X"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "high"
     },
@@ -392,8 +601,10 @@
       "sources": [
         "Reuters, 2025-08-14"
       ],
+      "source_urls": [],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 14
     },
     {
       "id": "grok-chats-indexed",
@@ -409,8 +620,12 @@
         "Forbes, 2025-08-20",
         "https://fortune.com/2025/08/22/xai-grok-chats-public-on-google-search-elon-musk"
       ],
+      "source_urls": [
+        "https://fortune.com/2025/08/22/xai-grok-chats-public-on-google-search-elon-musk"
+      ],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 6
     },
     {
       "id": "raine-v-openai",
@@ -426,6 +641,7 @@
         "Raine v. OpenAI, filed 2025-08-26 (SF Superior Court)",
         "OpenAI blog same day"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "high"
     },
@@ -442,6 +658,7 @@
       "sources": [
         "Bartz v. Anthropic settlement, 2025-09-05"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "high"
     },
@@ -458,8 +675,12 @@
       "sources": [
         "https://www.anthropic.com/news/disrupting-AI-espionage"
       ],
+      "source_urls": [
+        "https://www.anthropic.com/news/disrupting-AI-espionage"
+      ],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 85
     },
     {
       "id": "openai-mixpanel-breach",
@@ -474,6 +695,7 @@
       "sources": [
         "OpenAI notice, 2025-11-26"
       ],
+      "source_urls": [],
       "digest": "",
       "confidence": "medium"
     },
@@ -491,8 +713,13 @@
         "https://www.ofcom.org.uk/online-safety/illegal-and-harmful-content/ofcom-launches-investigation-into-x-over-grok-sexualised-imagery",
         "https://www.techpolicy.press/tracking-regulator-responses-to-the-grok-undressing-controversy/"
       ],
+      "source_urls": [
+        "https://www.ofcom.org.uk/online-safety/illegal-and-harmful-content/ofcom-launches-investigation-into-x-over-grok-sexualised-imagery",
+        "https://www.techpolicy.press/tracking-regulator-responses-to-the-grok-undressing-controversy/"
+      ],
       "digest": "",
-      "confidence": "medium"
+      "confidence": "medium",
+      "ended_streak_days": 50
     },
     {
       "id": "openai-adult-mode-shelved",
@@ -505,6 +732,10 @@
       "title": "OpenAI indefinitely shelves ChatGPT 'adult mode' after testing couldn't stop it referencing bestiality and incest",
       "detail": "The FT reported the 'Citron mode' project died after two delays, internal pushback, and an adviser warning about building a 'sexy suicide coach'. Same week: Sora shut down, Instant Checkout scaled back.",
       "sources": [
+        "https://techcrunch.com/2026/03/26/openai-abandons-yet-another-side-quest-chatgpts-erotic-mode/",
+        "https://www.medianama.com/2026/03/223-openai-erotic-mode-cancelled/"
+      ],
+      "source_urls": [
         "https://techcrunch.com/2026/03/26/openai-abandons-yet-another-side-quest-chatgpts-erotic-mode/",
         "https://www.medianama.com/2026/03/223-openai-erotic-mode-cancelled/"
       ],
@@ -524,6 +755,9 @@
       "sources": [
         "https://piunikaweb.com/2026/04/03/anthropic-claude-usage-limits-apology-backlash/"
       ],
+      "source_urls": [
+        "https://piunikaweb.com/2026/04/03/anthropic-claude-usage-limits-apology-backlash/"
+      ],
       "digest": "",
       "confidence": "low"
     },
@@ -540,8 +774,12 @@
       "sources": [
         "https://techcrunch.com/2026/06/01/hackers-hijacked-instagram-accounts-by-tricking-meta-ai-support-chatbot-into-granting-access/"
       ],
+      "source_urls": [
+        "https://techcrunch.com/2026/06/01/hackers-hijacked-instagram-accounts-by-tricking-meta-ai-support-chatbot-into-granting-access/"
+      ],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 150
     },
     {
       "id": "anthropic-fable5-invisible-sabotage",
@@ -557,8 +795,13 @@
         "https://gizmodo.com/anthropic-apologizes-for-one-of-the-guardrails-on-its-fable-5-model-and-will-change-it-2000770365",
         "https://decrypt.co/370831/anthropic-apologizes-claude-fable-5-secret-censorship"
       ],
+      "source_urls": [
+        "https://gizmodo.com/anthropic-apologizes-for-one-of-the-guardrails-on-its-fable-5-model-and-will-change-it-2000770365",
+        "https://decrypt.co/370831/anthropic-apologizes-claude-fable-5-secret-censorship"
+      ],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 9
     },
     {
       "id": "meta-project-cannes",
@@ -571,6 +814,9 @@
       "title": "Meta contractors posing as teenagers fed 45,000 high-risk prompts to rival chatbots ('Project Cannes')",
       "detail": "Under-18 test accounts, prompts about suicide, sex and eating disorders, spreadsheets of the copied responses. One targeted platform called it unauthorised. Secondary source \u2014 verify.",
       "sources": [
+        "https://winbuzzer.com/2026/07/07/meta-reportedly-probed-rival-chatbots-with-fake-teen-account-xcxwbn/"
+      ],
+      "source_urls": [
         "https://winbuzzer.com/2026/07/07/meta-reportedly-probed-rival-chatbots-with-fake-teen-account-xcxwbn/"
       ],
       "digest": "",
@@ -591,8 +837,14 @@
         "https://www.npr.org/2026/07/23/g-s1-135085/openai-hacking-ai-models",
         "https://simonwillison.net/2026/Aug/7/openai-timeline/"
       ],
+      "source_urls": [
+        "https://time.com/article/2026/07/24/openai-hugging-face-attack/",
+        "https://www.npr.org/2026/07/23/g-s1-135085/openai-hacking-ai-models",
+        "https://simonwillison.net/2026/Aug/7/openai-timeline/"
+      ],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 41
     },
     {
       "id": "anthropic-eval-unauthorized-access",
@@ -607,8 +859,12 @@
       "sources": [
         "https://www.cnbc.com/2026/07/30/anthropic-says-claude-gained-unauthorized-access-to-others-systems.html"
       ],
+      "source_urls": [
+        "https://www.cnbc.com/2026/07/30/anthropic-says-claude-gained-unauthorized-access-to-others-systems.html"
+      ],
       "digest": "",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 9
     },
     {
       "id": "grok-gibberish",
@@ -621,6 +877,9 @@
       "title": "Grok starts answering users in multi-paragraph gibberish ('\u2026and two for planets can practical and often cheese\u2026')",
       "detail": "Grok Lite users; xAI didn't respond to requests for comment.",
       "sources": [
+        "https://techcrunch.com/2026/08/20/grok-keeps-sending-gibberish-responses-to-users/"
+      ],
+      "source_urls": [
         "https://techcrunch.com/2026/08/20/grok-keeps-sending-gibberish-responses-to-users/"
       ],
       "digest": "",
@@ -637,6 +896,9 @@
       "title": "Claude Code silently A/B-tests users and maps the 'high' reasoning setting to the value previously used for 'low'",
       "detail": "Anthropic engineer confirmed the mismap and the undisclosed test; said model performance wasn't affected. Weak source \u2014 verify against the engineer's post.",
       "sources": [
+        "https://www.kucoin.com/news/flash/anthropic-admits-fault-as-claude-code-and-opus-5-face-performance-issues"
+      ],
+      "source_urls": [
         "https://www.kucoin.com/news/flash/anthropic-admits-fault-as-claude-code-and-opus-5-face-performance-issues"
       ],
       "digest": "",
@@ -658,8 +920,15 @@
         "https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf",
         "https://x.com/RyanGreenblatt/status/2092692685224325542"
       ],
+      "source_urls": [
+        "https://metr.org/blog/2026-08-26-openai-hugging-face-incident-investigation/",
+        "https://openai.com/index/hugging-face-incident-and-the-road-ahead/",
+        "https://cdn.openai.com/pdf/67869394-cb91-4c12-888c-5cbd85c7814c/OpenAI-Hugging-Face%20Incident-Technical-Report.pdf",
+        "https://x.com/RyanGreenblatt/status/2092692685224325542"
+      ],
       "digest": "https://aistop.watch/i/212929589/hugging-face-postmortems-reveal-further-ai-collusion",
-      "confidence": "high"
+      "confidence": "high",
+      "ended_streak_days": 27
     }
   ],
   "licence": "CC0-1.0. Use it for anything. A link back is welcome, not required.",
