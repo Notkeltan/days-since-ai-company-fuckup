@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -185,8 +186,26 @@ def mention_text(inc: Incident) -> str:
 
 # ── posting backends ─────────────────────────────────────────────────────────
 
+X_ID = re.compile(r"\A[0-9]{15,25}\Z")
+
+
+def real_x_id(v) -> str | None:
+    """The one gate every id passes before it can be stored or published.
+
+    One regex rejects all four impostors at once: Fanout's synthetic `local-N`,
+    DryRun's `dry-N`, a Bluesky `at://` URI, and None. Prefix checks kept missing
+    one of them - the guard here used to test `startswith("local-")`, which an
+    at:// URI sails straight through.
+    """
+    return v if isinstance(v, str) and X_ID.match(v) else None
+
+
 class Poster:
     def post(self, text: str, image: Path | None = None, alt: str = "", reply_to: str | None = None) -> str: ...
+
+    def x_id(self, key: str | None) -> str | None:
+        """The X tweet id behind a threading key, or None. Only X has one."""
+        return None
 
 
 class DryRun(Poster):
@@ -267,7 +286,13 @@ class BlueskyPoster(Poster):
 
 
 class Fanout(Poster):
-    """Post to several backends; returns the first backend's id (X) for threading."""
+    """Post to several backends.
+
+    Returns a THREADING KEY, not an X id. The key is whichever backend answered
+    first, so with Bluesky configured it can be an `at://` URI - the old
+    docstring claimed it was always X's and the code downstream believed it.
+    Use x_id() when you need X specifically.
+    """
     def __init__(self, backends: list[Poster]) -> None:
         self.b = backends
         self._map: dict[str, list[str]] = {}
@@ -288,9 +313,14 @@ class Fanout(Poster):
         self._map[key] = ids
         return key
 
-    @property
-    def last_failed(self) -> bool:
-        return bool(self._map) and not any(list(self._map.values())[-1])
+    def x_id(self, key: str | None) -> str | None:
+        """X's own id for a post, by backend identity rather than by position.
+
+        Returns None when X specifically failed, even if another backend
+        succeeded - which is the case the caller must not treat as a post.
+        """
+        ids = self._map.get(key) or []
+        return real_x_id(next((i for be, i in zip(self.b, ids) if isinstance(be, XPoster)), None))
 
 
 # ── main ─────────────────────────────────────────────────────────────────────
@@ -377,11 +407,19 @@ def main() -> None:
                    + (f"Previous record: {prior_record} days. " if prior_record is not None else "")
                    + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
-        if str(root).startswith("local-"):
-            # Nothing reached X. Leave state untouched so the next run
-            # retries, rather than recording a post that never happened.
-            sys.exit("the post did not go out; state left untouched")
-        poster.post(reply_text(latest), reply_to=root)
+        root_id = poster.x_id(root)
+        if not a.dry_run and not root_id:
+            # X specifically did not take it. Testing the threading key instead
+            # would pass an at:// URI straight through when Bluesky is up and X
+            # is down, recording a day as posted that X never saw.
+            sys.exit("the post did not go out on X; state left untouched")
+        posted = {"kind": "reset", "id": root_id, "incident": latest.id}
+        # The reply is best-effort: the root is already public, so nothing below
+        # may un-record it.
+        reply_id = poster.x_id(poster.post(reply_text(latest), reply_to=root))
+        if not a.dry_run and not reply_id:
+            print("[warn] the source reply did not go out", file=sys.stderr)
+        posted["reply"] = reply_id
         state["record_announced_for"] = None
     else:
         # ── DAILY ──
@@ -392,21 +430,45 @@ def main() -> None:
                + (f"Previous record: {record} days. " if record is not None else "")
                + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
-        if str(root).startswith("local-"):
-            # Nothing reached X. Leave state untouched so the next run
-            # retries, rather than recording a post that never happened.
-            sys.exit("the post did not go out; state left untouched")
+        root_id = poster.x_id(root)
+        if not a.dry_run and not root_id:
+            sys.exit("the post did not go out on X; state left untouched")
+        posted = {"kind": "daily", "id": root_id, "incident": latest.id}
         if is_new_record:
             state["record_announced_for"] = latest.id
 
+    mention_ids: dict[str, str | None] = {}
     for m in new_mentions:
-        poster.post(mention_text(m), reply_to=root)
+        mention_ids[m.id] = poster.x_id(poster.post(mention_text(m), reply_to=root))
+        if not a.dry_run and not mention_ids[m.id]:
+            print(f"[warn] mention for {m.id} did not go out", file=sys.stderr)
+
+    # A mention whose post failed must NOT be retired into known_ids, or the
+    # hole is permanent and invisible. Everything else is known either way.
+    failed = {k for k, v in mention_ids.items() if not v and not a.dry_run}
+    posts = state.setdefault("posts", {"by_date": {}, "by_incident": {}})
+    posts.setdefault("by_date", {})
+    posts.setdefault("by_incident", {})
+    if posted["id"]:
+        prior = posts["by_date"].get(today.isoformat())
+        if prior and prior.get("id") != posted["id"]:
+            print(f"[warn] overwriting the tweet recorded for {today}", file=sys.stderr)
+        posts["by_date"][today.isoformat()] = posted
+        if posted["kind"] == "reset":
+            # setdefault: the first announcement of an incident wins for good.
+            posts["by_incident"].setdefault(latest.id, {
+                "kind": "reset", "id": posted["id"], "date": today.isoformat()})
+    for k, v in mention_ids.items():
+        if v:
+            posts["by_incident"].setdefault(k, {
+                "kind": "mention", "id": v, "date": today.isoformat()})
 
     state.update({
         "last_incident_id": latest.id,
         "last_post_date": today.isoformat(),
-        "known_ids": sorted({i.id for i in incidents}),
+        "known_ids": sorted({i.id for i in incidents} - failed),
         "resets_seen": resets_seen,
+        "posts": posts,
     })
     if not a.dry_run:
         save_state(state)

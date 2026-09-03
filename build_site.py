@@ -252,7 +252,7 @@ def page(d: dict) -> str:
   {f'<p><strong>Longest streak on record:</strong> {rec["days"]} days ({e(rec["from"])} to {e(rec["to"])}).</p>' if rec else ""}
 
   <h2>Take the data</h2>
-  <p>It is CC0. Scrape it, embed it, argue with it. Updated once a day, and the
+  <p>It is CC BY-SA 3.0. Scrape it, embed it, argue with it. Updated once a day, and the
      files are static with permissive CORS, so you can fetch them straight from a
      browser.</p>
   <div class="wrap"><table>

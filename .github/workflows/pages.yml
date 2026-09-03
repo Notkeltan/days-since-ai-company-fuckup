@@ -8,7 +8,10 @@ name: publish the site
 on:
   push:
     branches: [main]
-    paths: ["incidents.yaml", "build_site.py", "out/sign.png", ".github/workflows/pages.yml"]
+    # state.json carries the captured tweet ids; without it here, a reset day
+    # records the URL people would actually click and never publishes it.
+    paths: ["incidents.yaml", "build_site.py", "state.json", "out/sign.png",
+            "out/reset.png", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:

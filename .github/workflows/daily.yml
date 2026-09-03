@@ -61,7 +61,10 @@ jobs:
             fi
           fi
       - name: commit state
-        if: github.event.inputs.dry_run != 'true'
+        # always(): post.py exits non-zero when a reply fails after the root post
+        # went out. Without this the implicit success() gate skips the commit and
+        # the runner throws away a state file that records a live tweet.
+        if: always() && github.event.inputs.dry_run != 'true'
         run: |
           git config user.name "counter-bot"
           git config user.email "bot@users.noreply.github.com"
