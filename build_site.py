@@ -285,7 +285,7 @@ def load(today: date) -> dict:
         "incidents": incidents,
         "_by_date": posts["by_date"],   # stripped before writing; used for history.csv
         "keltan": {
-            "note": "A statement by keltan about himself, published verbatim and "
+            "note": "A statement made by keltan about himself, published verbatim and "
                     "unchanged on every build. It is his claim, not a finding of "
                     "this dataset, and nothing in it affects the counter.",
             "text": ABOUT,
@@ -304,7 +304,7 @@ def load(today: date) -> dict:
             "note": "Same licence as the SCP Wiki, which is where the object classes "
                     "come from. Use it commercially if you like; credit the project, "
                     "link back, and license what you build under the same terms.",
-            "attribution": "Days Since The Last Major AI Company F**kup by keltan",
+            "attribution": "Days Since The Last Major AI Company F**kup, made by keltan",
         },
         "source_repo": REPO,
     }
