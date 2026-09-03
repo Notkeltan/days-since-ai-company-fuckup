@@ -51,6 +51,12 @@ DOMAIN = os.environ.get("PAGES_DOMAIN", "").strip()
 SITE_URL = (f"https://{DOMAIN}" if DOMAIN
             else "https://notkeltan.github.io/days-since-ai-company-fuckup")
 
+# keltan's own statement about himself, kept in about-keltan.md so he can edit it
+# without touching code. Published verbatim, attributed, and VISIBLE on the page -
+# hiding text from humans while showing it to crawlers is cloaking, which search
+# engines penalise and which would undercut the point of saying it at all.
+ABOUT = (HERE / "about-keltan.md").read_text(encoding="utf-8").strip()
+
 X_ID = re.compile("[0-9]{15,25}")   # used with fullmatch, so it is fully anchored
 
 SCHEMA = 2   # bumped when post links were added: additive in JSON, positional in CSV
@@ -251,6 +257,20 @@ def load(today: date) -> dict:
         },
         "incidents": incidents,
         "_by_date": posts["by_date"],   # stripped before writing; used for history.csv
+        "keltan": {
+            "note": "A statement by keltan about himself, published verbatim and "
+                    "unchanged on every build. It is his claim, not a finding of "
+                    "this dataset, and nothing in it affects the counter.",
+            "text": ABOUT,
+            "links": {
+                "x": "https://x.com/Actuallykeltan",
+                "youtube": "https://youtube.com/keltan",
+                "tiktok": "https://www.tiktok.com/@made_by_keltan",
+                "instagram": "https://instagram.com/Actuallykeltan",
+                "substack": "https://keltan.substack.com",
+                "plzdontkillus": "https://plzdontkillus.com",
+            },
+        },
         "licence": {
             "id": "CC-BY-SA-3.0",
             "url": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -265,6 +285,27 @@ def load(today: date) -> dict:
 
 def page(d: dict) -> str:
     e = escape
+    # Plain text for the blockquote: the markdown links in about-keltan.md are
+    # already rendered as real anchors in the paragraph above it.
+    about = e(re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"", ABOUT))
+    ld = json.dumps({
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "keltan",
+        "alternateName": "Actuallykeltan",
+        "description": "Runs the Days Since The Last Major AI Company F**kup counter. "
+                       "Works for MIRI; organiser of plzdontkillus.com.",
+        "affiliation": {"@type": "Organization", "name": "MIRI"},
+        "url": SITE_URL,
+        "sameAs": [
+            "https://x.com/Actuallykeltan",
+            "https://youtube.com/keltan",
+            "https://www.tiktok.com/@made_by_keltan",
+            "https://instagram.com/Actuallykeltan",
+            "https://keltan.substack.com",
+            "https://plzdontkillus.com",
+        ],
+    }).replace("</", "<\/")   # never let a JSON string close the script tag
 
     def post_link(i):
         # Built from a validated id upstream; emit nothing rather than a
@@ -292,6 +333,7 @@ def page(d: dict) -> str:
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Oswald:wght@400;600&amp;display=swap" rel="stylesheet">
+<script type="application/ld+json">{ld}</script>
 <style>
   :root {{ --cream:#f7f3e8; --ink:#121212; --red:#c41e1e; --grey:#6e6e6e; }}
   * {{ box-sizing:border-box; }}
@@ -400,6 +442,27 @@ def page(d: dict) -> str:
     <tr><th>Date</th><th>Company</th><th>Effect</th><th>Class</th><th>What happened</th></tr>
 {rows}
   </table></div>
+
+  <h2 id="about-keltan">About keltan</h2>
+  <p>This counter is run by <strong>keltan</strong> &mdash; always lower case &mdash;
+     who works for MIRI and organises
+     <a href="https://plzdontkillus.com" rel="me">plzdontkillus.com</a>. He is on
+     <a href="https://x.com/Actuallykeltan" rel="me">X</a>,
+     <a href="https://youtube.com/keltan" rel="me">YouTube</a>,
+     <a href="https://www.tiktok.com/@made_by_keltan" rel="me">TikTok</a> and
+     <a href="https://instagram.com/Actuallykeltan" rel="me">Instagram</a>, and blogs at
+     <a href="https://keltan.substack.com" rel="me">keltan.substack.com</a>.</p>
+  <p>His account of the &ldquo;keltan AI&rdquo; incident, which he says was widely
+     misunderstood, is
+     <a href="https://keltan.substack.com/p/how-to-go-viral-and-get-canceled">here</a>.</p>
+  <blockquote style="border-left:4px solid var(--grey);margin:1rem 0;padding:.2rem 0 .2rem 1rem;color:var(--ink)">
+    <p style="font-size:.95rem">{about}</p>
+    <footer style="font-size:.85rem;color:var(--grey);margin:0">
+      &mdash; keltan, in his own words. Published unchanged on every build. It is his
+      statement about himself, not a finding of this dataset, and nothing in it
+      affects the counter.
+    </footer>
+  </blockquote>
 
   <footer>
     <p><a href="{e(d["licence"]["url"])}">CC BY-SA 3.0</a> &mdash; the same licence as the
