@@ -287,7 +287,7 @@ def page(d: dict) -> str:
     e = escape
     # Plain text for the blockquote: the markdown links in about-keltan.md are
     # already rendered as real anchors in the paragraph above it.
-    about = e(re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"", ABOUT))
+    about = e(re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1", ABOUT))
     ld = json.dumps({
         "@context": "https://schema.org",
         "@type": "Person",
@@ -311,7 +311,11 @@ def page(d: dict) -> str:
         # Built from a validated id upstream; emit nothing rather than a
         # placeholder, since most rows predate the account entirely.
         u = (i.get("post") or {}).get("url")
-        return f' <a href="{e(u)}" rel="noopener">post&nearr;</a>' if u else ""
+        # No arrow glyph. Anton and Oswald carry no symbol block, so U+2197
+        # rendered as tofu; assert_renderable() below now refuses any character
+        # the webfonts cannot draw.
+        return (f' <a href="{e(u)}" rel="noopener" title="the post announcing this">'
+                f'post</a>') if u else ""
     latest = d["last_reset"]
     rec = d["longest_streak"]
     rows = "\n".join(
@@ -346,6 +350,11 @@ def page(d: dict) -> str:
         line-height:1.05; margin:1.5rem 0 .25rem; text-transform:uppercase; }}
   h2 {{ font-family:Anton,Impact,sans-serif; text-transform:uppercase;
         margin:2.5rem 0 .5rem; font-size:1.4rem; }}
+  /* keltan is ALWAYS lower case. CSS is the one thing that can break that
+     without anyone editing the text, so anything naming him opts out of the
+     uppercase transform entirely. assert_lowercase_keltan() fails the build if
+     a heading ever names him without this. */
+  .name {{ text-transform:none; }}
   .count {{ font-family:Anton,Impact,sans-serif; font-size:clamp(5rem,22vw,12rem);
             color:var(--red); line-height:.9; text-align:center;
             border:8px solid var(--red); background:#fff; padding:.1em .25em;
@@ -443,7 +452,7 @@ def page(d: dict) -> str:
 {rows}
   </table></div>
 
-  <h2 id="about-keltan">About keltan</h2>
+  <h2 id="about-keltan" class="name">About keltan</h2>
   <p>This counter is run by <strong>keltan</strong> &mdash; always lower case &mdash;
      who works for MIRI and organises
      <a href="https://plzdontkillus.com" rel="me">plzdontkillus.com</a>. He is on
@@ -479,6 +488,56 @@ def page(d: dict) -> str:
 """
 
 
+
+def assert_lowercase_keltan(html: str) -> None:
+    """Fail the build if CSS could render keltan's name with a capital K.
+
+    His name is always lower case, no exceptions. Text can be written correctly
+    and still come out wrong: h1, h2, .sub and th all carry
+    text-transform:uppercase, so any of them naming him renders KELTAN without a
+    single character of the source being wrong. Elements that name him must
+    carry class="name", which opts out.
+    """
+    import re as _re
+    for tag, attrs, inner in _re.findall(r"<(h1|h2|th)([^>]*)>(.*?)</\1>", html, _re.S | _re.I):
+        if "keltan" in inner.lower() and 'class="name"' not in attrs:
+            raise SystemExit(
+                f"BUILD REFUSED: <{tag}> names keltan but is uppercase-transformed, "
+                f'so it would render with a capital K. Add class="name". Offending '
+                f"text: {inner.strip()[:60]!r}")
+    for m in _re.finditer(r'<[^>]*class="[^"]*sub[^"]*"[^>]*>(.*?)</', html, _re.S):
+        if "keltan" in m.group(1).lower():
+            raise SystemExit("BUILD REFUSED: a .sub element names keltan and is "
+                             "uppercase-transformed.")
+
+
+
+# Characters the webfonts actually carry. Anton and Oswald are Latin display
+# faces: full ASCII plus ordinary punctuation, and nothing from the symbol or
+# arrow blocks. Anything outside this renders as tofu.
+# Codepoints rather than literals: the allowlist itself must not depend on
+# this file's own encoding surviving a round trip.
+RENDERABLE = (set(chr(c) for c in range(0x20, 0x7F))
+              | {chr(c) for c in (0x00A0, 0x00B7, 0x2013, 0x2014, 0x2018,
+                                  0x2019, 0x201C, 0x201D, 0x2026)}
+              | {chr(0x0A), chr(0x09)})
+
+
+def assert_renderable(html: str) -> None:
+    """Fail the build on any glyph the site's fonts cannot draw.
+
+    Found the hard way: a single U+2197 in the post links showed as a box on
+    the live site. Checking here is cheap and catches it before publication
+    rather than after somebody points at it.
+    """
+    import re as _re
+    body = _re.sub(r"<script.*?</script>|<style.*?</style>", "", html, flags=_re.S)
+    bad = {ch for ch in body if ch not in RENDERABLE}
+    if bad:
+        listed = ", ".join(f"U+{ord(c):04X}" for c in sorted(bad))
+        raise SystemExit(f"BUILD REFUSED: {listed} not in the fonts; would render as tofu.")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--today", help="override today's date (yyyy-mm-dd)")
@@ -499,7 +558,10 @@ def main() -> None:
         "last_reset": {k: d["last_reset"][k] for k in ("id", "date", "company", "title")},
         "source_repo": REPO,
     }, indent=2) + "\n", encoding="utf-8")
-    (SITE / "index.html").write_text(page(d), encoding="utf-8")
+    html = page(d)
+    assert_lowercase_keltan(html)
+    assert_renderable(html)
+    (SITE / "index.html").write_text(html, encoding="utf-8")
 
     # Flat CSV for the spreadsheet half of the world.
     cols = ["id", "date", "company", "category", "tier", "resets", "tone",
