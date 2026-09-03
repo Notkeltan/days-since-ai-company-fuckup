@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import re
 import os
 import io
 import json
@@ -33,6 +34,11 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 SITE = HERE / "site"
+STATE = HERE / "state.json"
+# Explicit constants, not derived. min(by_date) would report the account as
+# having started on the day URL capture started, which is three days late.
+POSTING_SINCE = "2026-08-27"    # first day the account posted at all
+CAPTURE_SINCE = "2026-09-03"    # first day each post's address was recorded
 REPO = "https://github.com/Notkeltan/days-since-ai-company-fuckup"
 HANDLE = "@xRiskMemes"
 # Custom domain for GitHub Pages, from the PAGES_DOMAIN repo variable.
@@ -45,7 +51,9 @@ DOMAIN = os.environ.get("PAGES_DOMAIN", "").strip()
 SITE_URL = (f"https://{DOMAIN}" if DOMAIN
             else "https://notkeltan.github.io/days-since-ai-company-fuckup")
 
-SCHEMA = 1
+X_ID = re.compile("[0-9]{15,25}")   # used with fullmatch, so it is fully anchored
+
+SCHEMA = 2   # bumped when post links were added: additive in JSON, positional in CSV
 
 
 # ── SCP object classes ───────────────────────────────────────────────────────
@@ -65,6 +73,60 @@ OBJECT_CLASSES = {
     "Pending": "Not enough information to classify yet.",
     "Uncontained": "Not yet contained. Ongoing effort required to establish containment.",
 }
+
+
+def load_posts() -> dict:
+    """Captured tweet ids from state.json. Cannot raise.
+
+    The counter is the point and the links are a convenience, so a missing or
+    malformed state.json must degrade to no links rather than fail the build.
+    """
+    try:
+        s = json.loads(STATE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"by_date": {}, "by_incident": {}}
+    p = s.get("posts") or {}
+    return {"by_date": p.get("by_date") or {}, "by_incident": p.get("by_incident") or {},
+            # Which resets the account actually announced. Needed because an
+            # incident's date is its FIRST DISCLOSURE, which can predate the
+            # account even when a post about it exists.
+            "resets_seen": s.get("resets_seen") or []}
+
+
+def post_url(rec: dict | None) -> str | None:
+    """Build the URL from a validated bare id - never from a stored string.
+
+    Storing ids rather than URLs means an account rename does not invalidate the
+    archive, and it means nothing user-controlled reaches an href. x.com resolves
+    any handle in the path, so `i` is a safe fallback when the handle is unset.
+    """
+    tid = (rec or {}).get("id")
+    if not isinstance(tid, str) or not X_ID.fullmatch(tid):
+        return None
+    return f"https://x.com/{HANDLE.lstrip('@') or 'i'}/status/{tid}"
+
+
+def post_for(inc: dict, posts: dict, is_current: bool) -> dict | None:
+    """Three distinct states, deliberately not collapsed into one.
+
+    None            no post ever existed - the incident predates the account.
+    url None        a post went out and its address was not recorded.
+    url set         captured.
+
+    Flattening these would claim the archive is more broken than it is.
+    """
+    kind = "reset" if inc["resets"] else "mention"
+    rec = posts["by_incident"].get(inc["id"])
+    if rec:
+        return {"url": post_url(rec), "kind": rec.get("kind") or kind,
+                "date": rec.get("date"), "captured": bool(post_url(rec))}
+    # Announced by the account, or still the one on the sign: a post exists, its
+    # address just was not kept. NOT the same as no post at all.
+    if inc["id"] in posts["resets_seen"] or is_current:
+        return {"url": None, "kind": kind, "date": None, "captured": False}
+    if inc["date"] < POSTING_SINCE:      # ISO strings sort chronologically
+        return None                       # predates the account entirely
+    return {"url": None, "kind": kind, "date": None, "captured": False}
 
 
 def object_class(inc: dict, is_current: bool) -> str | None:
@@ -121,8 +183,10 @@ def load(today: date) -> dict:
     ]
     record = max(streaks, key=lambda s: s["days"]) if streaks else None
 
+    posts = load_posts()
     for i in incidents:
         i["object_class"] = object_class(i, i["id"] == latest["id"])
+        i["post"] = post_for(i, posts, i["id"] == latest["id"])
 
     by_id = {i["id"]: i for i in incidents}
     for s in streaks:
@@ -150,6 +214,19 @@ def load(today: date) -> dict:
             "by_tier": tally(incidents, lambda i: f"tier {i['tier']}"),
             "by_year": tally(incidents, lambda i: i["date"][:4]),
             "by_confidence": tally(incidents, lambda i: i["confidence"]),
+            # The cheapest possible monitor for capture having silently broken.
+            "posts_captured": sum(1 for i in incidents if (i["post"] or {}).get("url")),
+        },
+        "posts": {
+            "account": f"https://x.com/{HANDLE.lstrip('@')}",
+            "posting_since": POSTING_SINCE,
+            "capturing_since": CAPTURE_SINCE,
+            "latest": (lambda r: {**r, "url": post_url(r)} if r else None)(
+                posts["by_date"].get(max(posts["by_date"], default=""))),
+            "note": "A null `post` on an incident means no post ever existed - it "
+                    "predates the account. A `post` with a null `url` means one went "
+                    "out and its address was not recorded, because capture began "
+                    "after posting did.",
         },
         "streaks": streaks,
         "object_classes": {
@@ -173,6 +250,7 @@ def load(today: date) -> dict:
             "note": "Full history since the first logged entry. Nothing is aged out.",
         },
         "incidents": incidents,
+        "_by_date": posts["by_date"],   # stripped before writing; used for history.csv
         "licence": {
             "id": "CC-BY-SA-3.0",
             "url": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -187,12 +265,18 @@ def load(today: date) -> dict:
 
 def page(d: dict) -> str:
     e = escape
+
+    def post_link(i):
+        # Built from a validated id upstream; emit nothing rather than a
+        # placeholder, since most rows predate the account entirely.
+        u = (i.get("post") or {}).get("url")
+        return f' <a href="{e(u)}" rel="noopener">post&nearr;</a>' if u else ""
     latest = d["last_reset"]
     rec = d["longest_streak"]
     rows = "\n".join(
         f'      <tr><td>{e(i["date"])}</td><td>{e(i["company"])}</td>'
         f'<td>{"reset" if i["resets"] else "logged"}</td>'
-        f'<td>{e(i["object_class"] or "—")}</td><td>{e(i["title"])}</td></tr>'
+        f'<td>{e(i["object_class"] or "—")}</td><td>{e(i["title"])}{post_link(i)}</td></tr>'
         for i in reversed(d["incidents"][-15:])
     )
     table = "\n".join(
@@ -340,7 +424,10 @@ def main() -> None:
 
     d = load(today)
     SITE.mkdir(exist_ok=True)
-    (SITE / "data.json").write_text(json.dumps(d, indent=2) + "\n", encoding="utf-8")
+    # Keys starting with _ are build-time scratch (the by-date post map used for
+    # history.csv) and must not reach the published schema.
+    public = {k: v for k, v in d.items() if not k.startswith("_")}
+    (SITE / "data.json").write_text(json.dumps(public, indent=2) + "\n", encoding="utf-8")
     (SITE / "current.json").write_text(json.dumps({
         "schema": SCHEMA,
         "generated_at": d["generated_at"],
@@ -353,13 +440,15 @@ def main() -> None:
 
     # Flat CSV for the spreadsheet half of the world.
     cols = ["id", "date", "company", "category", "tier", "resets", "tone",
-            "confidence", "ended_streak_days", "title", "detail", "digest", "sources"]
+            "confidence", "ended_streak_days", "title", "detail", "digest", "sources",
+            "post_url"]
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore", lineterminator="\n")
     w.writeheader()
     for i in d["incidents"]:
         row = dict(i)
         row["sources"] = " | ".join(i["sources"])
+        row["post_url"] = (i["post"] or {}).get("url") or ""
         w.writerow(row)
     (SITE / "incidents.csv").write_text(buf.getvalue(), encoding="utf-8")
 
@@ -368,7 +457,8 @@ def main() -> None:
     # publishing it saves everyone the same small piece of work.
     buf = io.StringIO()
     w = csv.writer(buf, lineterminator="\n")
-    w.writerow(["date", "days_since_last_reset", "last_reset_id", "last_reset_company"])
+    w.writerow(["date", "days_since_last_reset", "last_reset_id", "last_reset_company",
+                "post_url"])
     resets = [i for i in d["incidents"] if i["resets"]]
     start, cur = date.fromisoformat(resets[0]["date"]), today
     day, idx = start, 0
@@ -376,7 +466,8 @@ def main() -> None:
         while idx + 1 < len(resets) and date.fromisoformat(resets[idx + 1]["date"]) <= day:
             idx += 1
         w.writerow([day.isoformat(), (day - date.fromisoformat(resets[idx]["date"])).days,
-                    resets[idx]["id"], resets[idx]["company"]])
+                    resets[idx]["id"], resets[idx]["company"],
+                    post_url(d["_by_date"].get(day.isoformat())) or ""])
         day = date.fromordinal(day.toordinal() + 1)
     (SITE / "history.csv").write_text(buf.getvalue(), encoding="utf-8")
     (SITE / ".nojekyll").write_text("", encoding="utf-8")
