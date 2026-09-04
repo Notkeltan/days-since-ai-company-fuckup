@@ -23,6 +23,7 @@ on:
 
 permissions:
   contents: write               # to commit state.json back
+  actions: write                # to dispatch the Pages rebuild
 
 concurrency:
   group: incidents            # the detector writes incidents.yaml; don't race it
@@ -74,6 +75,15 @@ jobs:
           # the detector pushes to the same branch; rebase rather than fail
           git pull --rebase --autostash
           git push
+      # A GITHUB_TOKEN push does not fire push workflows, so listing state.json
+      # in pages.yml's paths was not enough - the tweet id it just captured would
+      # sit in the repo and never reach the site. Dispatch explicitly.
+      - name: publish the site
+        if: always() && github.event.inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml
+
       - name: alert on failure
         if: failure()
         env:
