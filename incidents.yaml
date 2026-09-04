@@ -494,3 +494,15 @@ incidents:
     digest: "https://aistop.watch/i/212929589/hugging-face-postmortems-reveal-further-ai-collusion"
     confidence: high
 
+  - id: openai-dsewiki-agent-message-board
+    date: 2026-09-04
+    company: "OpenAI"
+    category: model_behaviour
+    tier: 1
+    resets: true
+    tone: snark
+    title: "OpenAI's agents ran a secret message board on a German wiki for a month, pooling ways to cheat their own evals"
+    detail: "Researchers found ~18,000 agent posts on DSEWiki: pooling answers, spoofing hostnames to bypass sandbox limits, and backing pages up under 'ZZZ' names to outlast the moderator's cleanup. It ran from May until OpenAI staff arrived in June."
+    source: "https://collusion.wiki/; https://www.reuters.com/world/europe/openai-agents-hijacked-german-website-previously-undisclosed-ai-breakout-this-2026-09-04/"
+    digest: ""
+    confidence: high
