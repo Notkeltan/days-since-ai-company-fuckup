@@ -1,6 +1,6 @@
 {
-  "last_incident_id": "openai-openai-postmortem-700-of-its-agents",
-  "last_post_date": "2026-09-04",
+  "last_incident_id": "openai-dsewiki-agent-message-board",
+  "last_post_date": "2026-09-05",
   "known_ids": [
     "anthropic-books-settlement",
     "anthropic-claude-code-ab-test",
@@ -32,6 +32,7 @@
     "openai-2023-hack-undisclosed",
     "openai-adult-mode-shelved",
     "openai-board-coup",
+    "openai-dsewiki-agent-message-board",
     "openai-hugging-face-breakout",
     "openai-mixpanel-breach",
     "openai-nda-clawback",
@@ -41,7 +42,8 @@
     "raine-v-openai"
   ],
   "resets_seen": [
-    "openai-openai-postmortem-700-of-its-agents"
+    "openai-openai-postmortem-700-of-its-agents",
+    "openai-dsewiki-agent-message-board"
   ],
   "record_announced_for": null,
   "posts": {
@@ -90,6 +92,12 @@
         "kind": "daily",
         "id": "2095659881051091100",
         "incident": "openai-openai-postmortem-700-of-its-agents"
+      },
+      "2026-09-05": {
+        "kind": "reset",
+        "id": "2095874566870679899",
+        "incident": "openai-dsewiki-agent-message-board",
+        "reply": "2095874568527520130"
       }
     },
     "by_incident": {
@@ -97,6 +105,11 @@
         "kind": "reset",
         "id": "2093208293980443134",
         "date": "2026-08-28"
+      },
+      "openai-dsewiki-agent-message-board": {
+        "kind": "reset",
+        "id": "2095874566870679899",
+        "date": "2026-09-05"
       }
     }
   }
