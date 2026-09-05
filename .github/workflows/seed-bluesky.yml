@@ -1,0 +1,38 @@
+name: seed bluesky
+
+# One-off catch-up for the Bluesky account, which was set up a week after the
+# counter started posting on X. Dispatch by hand; the daily fan-out handles
+# everything from the next post onward. Never touches X, never writes state.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "print what would be posted, send nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - name: seed
+        env:
+          BSKY_HANDLE: ${{ vars.BSKY_HANDLE }}
+          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
+          COUNTER_HANDLE: ${{ vars.COUNTER_HANDLE }}
+          COUNTER_CENSOR: ${{ vars.COUNTER_CENSOR }}
+        run: |
+          set -o pipefail
+          if [ "${{ github.event.inputs.dry_run }}" = "false" ]; then
+            python scripts/seed_bluesky.py
+          else
+            python scripts/seed_bluesky.py --dry-run
+          fi
