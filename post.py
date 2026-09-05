@@ -263,11 +263,38 @@ class XPoster(Poster):
 
 
 class BlueskyPoster(Poster):
+    LIMIT = 300         # Bluesky's own cap; clip() already holds posts to X's 280
+
     def __init__(self) -> None:
         from atproto import Client
         self.c = Client()
         self.c.login(os.environ["BSKY_HANDLE"], os.environ["BSKY_APP_PASSWORD"])
         self._refs: dict[str, tuple] = {}
+
+    @staticmethod
+    def rich(text: str):
+        """Bluesky does not linkify URLs. Without an explicit facet the source
+        link in a reply renders as dead text - verified on the first real post,
+        where https://collusion.wiki/ appeared with no anchor at all.
+
+        Returns a TextBuilder when there is a URL to mark up, otherwise the
+        plain string, so posts without links take the simplest path.
+        """
+        urls = list(re.finditer(r"https?://[^\s]+", text))
+        if not urls:
+            return text
+        from atproto import client_utils
+        tb = client_utils.TextBuilder()
+        pos = 0
+        for m in urls:
+            url = m.group(0).rstrip(".,;:)")     # trailing punctuation is prose
+            if m.start() > pos:
+                tb.text(text[pos:m.start()])
+            tb.link(url, url)
+            pos = m.start() + len(url)
+        if pos < len(text):
+            tb.text(text[pos:])
+        return tb
 
     def post(self, text, image=None, alt="", reply_to=None):
         from atproto import models
@@ -275,10 +302,11 @@ class BlueskyPoster(Poster):
         if reply_to and reply_to in self._refs:
             root, parent = self._refs[reply_to]
             reply_ref = models.AppBskyFeedPost.ReplyRef(root=root, parent=parent)
+        body = self.rich(text[:self.LIMIT])
         if image:
-            r = self.c.send_image(text=text[:300], image=image.read_bytes(), image_alt=alt[:1000], reply_to=reply_ref)
+            r = self.c.send_image(text=body, image=image.read_bytes(), image_alt=alt[:1000], reply_to=reply_ref)
         else:
-            r = self.c.send_post(text=text[:300], reply_to=reply_ref)
+            r = self.c.send_post(text=body, reply_to=reply_ref)
         strong = models.create_strong_ref(r)
         root = self._refs[reply_to][0] if reply_to and reply_to in self._refs else strong
         self._refs[r.uri] = (root, strong)

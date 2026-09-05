@@ -65,11 +65,27 @@ def main() -> None:
            + (f"Previous record: {record} days. " if record is not None else "")
            + f"Last {counter.NOUN}: {last_label} — {latest.title}")
 
+    reply = counter.reply_text(latest)
+
     print("─── would post to Bluesky ───")
     print(text)
     print(f"[image: {img}]")
     print("\n─── reply ───")
-    print(counter.reply_text(latest))
+    print(reply)
+
+    # Bluesky does not linkify URLs; a post's links exist only as facets. The
+    # first seeded reply went out with its source URL as dead text. Print the
+    # facets the reply will actually carry, so a dry run proves the markup
+    # before anything is published rather than after.
+    print("\n─── reply facets ───")
+    rich = counter.BlueskyPoster.rich(reply[:counter.BlueskyPoster.LIMIT])
+    if isinstance(rich, str):
+        print("(none - no URL in the reply)")
+    else:
+        for f in rich.build_facets():
+            s, e = f.index.byte_start, f.index.byte_end
+            shown = rich.build_text().encode()[s:e].decode(errors="replace")
+            print(f"  {s}-{e}  {shown}  ->  {[getattr(x, 'uri', x) for x in f.features]}")
 
     if a.dry_run:
         print("\ndry run; nothing sent")
@@ -81,8 +97,7 @@ def main() -> None:
     bsky = counter.BlueskyPoster()
     root = bsky.post(text, img, alt)
     print(f"\nposted: {root}")
-    reply = bsky.post(counter.reply_text(latest), reply_to=root)
-    print(f"reply : {reply}")
+    print(f"reply : {bsky.post(reply, reply_to=root)}")
 
 
 if __name__ == "__main__":
