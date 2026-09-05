@@ -43,7 +43,10 @@ jobs:
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          # A handle is public, so it lives in a repo variable; only the app
+          # password is a secret. Setting BSKY_HANDLE is what switches Bluesky
+          # posting on, so the counter stays X-only until the password is added.
+          BSKY_HANDLE: ${{ vars.BSKY_HANDLE }}
           BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
           COUNTER_HANDLE: ${{ vars.COUNTER_HANDLE }}
           COUNTER_CENSOR: ${{ vars.COUNTER_CENSOR }}
