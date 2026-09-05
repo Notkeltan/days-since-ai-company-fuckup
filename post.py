@@ -381,8 +381,17 @@ def main() -> None:
         poster: Poster = DryRun()
     else:
         backends: list[Poster] = [XPoster()]
-        if os.environ.get("BSKY_HANDLE"):
-            backends.append(BlueskyPoster())
+        # Both, not just the handle: the handle is a public repo variable and can
+        # be set well before the app password exists. Requiring only the handle
+        # meant BlueskyPoster was constructed with an empty password, and the
+        # login exception happens at construction - outside Fanout's per-post
+        # try/except - which would take the whole daily post down with it.
+        if os.environ.get("BSKY_HANDLE") and os.environ.get("BSKY_APP_PASSWORD"):
+            try:
+                backends.append(BlueskyPoster())
+            except Exception as e:
+                # Bluesky is the secondary platform; X is the product.
+                print(f"[warn] Bluesky unavailable, posting to X only: {e}", file=sys.stderr)
         poster = Fanout(backends)
 
     last_label = f"{latest.date.isoformat()} · {latest.company}"
