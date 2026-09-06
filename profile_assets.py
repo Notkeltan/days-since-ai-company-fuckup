@@ -46,22 +46,45 @@ def avatar(censor: str) -> Image.Image:
     return img.resize((400, 400), Image.LANCZOS)
 
 
-def header(censor: str) -> Image.Image:
-    W, H = 3000, 1000  # 2x
+def header(censor: str, credit: str = "@Actuallykeltan", ratio: float = 3.0) -> Image.Image:
+    """The banner, laid out proportionally so it can be cut to a platform's shape.
+
+    X wants 3:1. Bluesky publishes 3:1 as its spec but renders the banner into a
+    4:1 box with object-fit: cover, measured on the live profile at a fixed
+    600x150 that does not change with viewport width. Feeding it a 3:1 image
+    therefore loses the top and bottom sixth - which took both hazard stripes
+    and half the handle with it. Rendering the shape the platform actually uses
+    is the fix; nothing is cropped, so nothing has to be guessed at.
+    """
+    W = 3000  # 2x
+    H = round(W / ratio)
+    # Type scales with the canvas, not just the spacing. Scaling the positions
+    # alone drove the two title lines into each other at 4:1. `k` is 1.0 at the
+    # 3:1 reference, so the X banner is reproduced exactly.
+    k = H / 1000
+    px = lambda v: max(1, round(v * k))
     img = Image.new("RGB", (W, H), rs.CREAM)
-    d = ImageDraw.Draw(img)
-    stripes(img, 0, 70, period=90)
-    stripes(img, H - 70, H, period=90)
+    stripes(img, 0, px(70), period=90)
+    stripes(img, H - px(70), H, period=90)
     d = ImageDraw.Draw(img)
     noun = rs.noun_forms(censor)[0]
-    f = rs.font("Anton-Regular.ttf", 190)
-    rs.draw_censored(d, W / 2, 380, "DAYS SINCE THE LAST", f, rs.BLACK, anchor="m")
-    rs.draw_censored(d, W / 2, 600, f"MAJOR AI COMPANY {noun}", f, rs.BLACK, anchor="m")
+    f = rs.font("Anton-Regular.ttf", px(190))
+    rs.draw_censored(d, W / 2, 0.38 * H, "DAYS SINCE THE LAST", f, rs.BLACK, anchor="m")
+    rs.draw_censored(d, W / 2, 0.60 * H, f"MAJOR AI COMPANY {noun}", f, rs.BLACK, anchor="m")
     # keltan's call: a byline, not a tagline. The bio already explains the
     # account, and X crops the header hard on mobile.
-    d.text((W / 2, 790), "made by keltan", font=rs.font("Anton-Regular.ttf", 62), fill=rs.GREY, anchor="mm")
-    d.text((W / 2, 868), "@Actuallykeltan", font=rs.font("Oswald-Bold.ttf", 40, 500), fill=rs.GREY, anchor="mm")
-    return img.resize((1500, 500), Image.LANCZOS)
+    d.text((W / 2, 0.79 * H), "made by keltan", font=rs.font("Anton-Regular.ttf", px(62)), fill=rs.GREY, anchor="mm")
+    # The byline points at keltan's personal account on whichever platform the
+    # banner is going on. An X header advertising a Bluesky handle sends people
+    # somewhere they cannot follow him from.
+    d.text((W / 2, 0.868 * H), credit, font=rs.font("Oswald-Bold.ttf", px(40), 500), fill=rs.GREY, anchor="mm")
+    return img.resize((W // 2, H // 2), Image.LANCZOS)
+
+
+# Byline and shape per platform: the handle has to be one the reader can use,
+# and the aspect has to be the one that platform actually renders.
+HEADERS = {"header.png": ("@Actuallykeltan", 3.0),
+           "header-bsky.png": ("@keltan.net", 4.0)}
 
 
 if __name__ == "__main__":
@@ -72,5 +95,8 @@ if __name__ == "__main__":
     out = Path(a.out)
     out.mkdir(exist_ok=True)
     avatar(a.censor).save(out / "avatar.png")
-    header(a.censor).save(out / "header.png")
-    print(out / "avatar.png", out / "header.png")
+    print(out / "avatar.png")
+    for name, (credit, ratio) in HEADERS.items():
+        im = header(a.censor, credit, ratio)
+        im.save(out / name)
+        print(out / name, credit, f"{im.width}x{im.height}")
