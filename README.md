@@ -180,6 +180,20 @@ admitted its safeguards had not been switched on. A later disclosure is a new
 incident when it discloses something materially new in its own right, and it is
 dated to its own first disclosure.
 
+**Rulings stick, subjects don't.** `declined.yaml` records candidates that were
+considered and deliberately not counted, with the reasoning and - the field that
+matters - what would reopen each one. A finding is set aside only when its
+first-disclosure **date** matches an entry there *and* it is recognisably the
+same disclosure: same company and full title, or a shared URL. A later
+development about the same subject is judged from scratch. Matching on a URL as
+well as the title is deliberate - the title is the model's own words, so keying
+on it alone would let a re-wording silently switch the ruling off. The file
+exists for
+two reasons: a settled question would otherwise arrive as a fresh review issue
+every morning until it aged out, and a counter whose claim is even-handedness
+should show the calls that went against a story as well as the ones that went
+for it.
+
 **Known bias to watch.** The digest is written by people who think this
 technology is dangerous, and it is published by keltan's own employer. That
 shapes which stories arrive at all: if MIRI under-covers a company, so will the
@@ -240,9 +254,11 @@ Open the repo in the GitHub app → Issues → New issue → **Log an incident**
 
 ```
 incidents.yaml         the data (edit this)
+declined.yaml          candidates ruled out by hand, and what would reopen each
 post.py                daily runner: streak maths, templates, X/Bluesky posting
 render_sign.py         the PNG (censor modes, footer description, somber variant)
-profile_assets.py      avatar (400x400) + header (1500x500) in the sign style
+profile_assets.py      avatar (400x400) + headers (1500x500) in the sign style;
+                       header.png is bylined for X, header-bsky.png for Bluesky
 state.json             written by the bot; commit it
 .github/workflows/daily.yml
 fonts/                 Anton + Oswald (OFL), downloaded on first run; gitignored

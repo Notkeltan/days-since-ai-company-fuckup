@@ -50,6 +50,7 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 INCIDENTS = HERE / "incidents.yaml"
+DECLINED = HERE / "declined.yaml"
 OUT = HERE / "out"
 
 TZ = ZoneInfo(os.environ.get("COUNTER_TZ", "Australia/Sydney"))
@@ -293,6 +294,92 @@ def known(data: dict) -> tuple[set[str], date]:
     return ids, max(dates)
 
 
+DECLINED_FIELDS = ("id", "date", "company", "title", "why", "reopen_if")
+
+
+def iso_day(v) -> str:
+    """yyyy-mm-dd from whatever YAML or JSON produced, or "" if it is not a date.
+
+    YAML turns an unquoted date into a datetime.date, a quoted one into a str,
+    and a date with a time into a datetime; findings arrive from JSON as strings.
+    Collapsing all of them here is what stops a ruling from being written down
+    and then never matching anything.
+    """
+    if isinstance(v, datetime):
+        v = v.date()
+    if isinstance(v, date):
+        return v.isoformat()
+    try:
+        return date.fromisoformat(str(v).strip()).isoformat()
+    except (TypeError, ValueError):
+        return ""
+
+
+def load_declined() -> list[dict]:
+    """Candidates a human has already ruled out. Absent file means none.
+
+    Every entry is validated here rather than at each point of use, because the
+    two consumers - the index and the brief - would otherwise be free to
+    disagree about which fields are optional, and did.
+    """
+    if not DECLINED.exists():
+        return []
+    entries = (yaml.safe_load(DECLINED.read_text(encoding="utf-8")) or {}).get("declined") or []
+    for e in entries:
+        missing = [k for k in DECLINED_FIELDS if not str(e.get(k, "") or "").strip()]
+        if missing:
+            sys.exit(f"declined.yaml entry {e.get('id', '?')!r} is missing: {', '.join(missing)}")
+        iso = iso_day(e["date"])
+        if not iso:
+            sys.exit(f"declined.yaml entry {e['id']!r} needs a yyyy-mm-dd date, got {e['date']!r}")
+        e["date"] = iso
+    return entries
+
+
+def norm(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", str(text).lower()).strip("-")
+
+
+def norm_url(u: str) -> str:
+    """Enough normalising to survive a scheme or a trailing slash differing."""
+    u = str(u).strip().lower().rstrip("/")
+    u = re.sub(r"\A(?:https?://)?(?:www\.)?", "", u)
+    return u
+
+
+def keys_for(company: str, title: str, urls) -> set[str]:
+    """Every handle by which one disclosure can be recognised again.
+
+    Deliberately NOT slug(): that truncates to 48 characters to keep
+    incidents.yaml ids short, which here would mean two different stories
+    published on one day about one company collide on their opening words and
+    the second is thrown away. Identity uses the full title, and the URLs the
+    finding cites, because a URL is the one part of a finding the model does not
+    re-author - a re-worded title alone must not make a ruling silently stop
+    working.
+    """
+    out = {norm(f"{company} {title}")}
+    out |= {norm_url(u) for u in urls if str(u).strip()}
+    return {k for k in out if k}
+
+
+def declined_index(entries: list[dict]) -> set[tuple[str, str]]:
+    """Keyed on (handle, first-disclosure date), never on a handle alone.
+
+    A ruling is about one disclosure, not about a subject. Suppressing every
+    future finding that shares a handle would be the same mistake that lost the
+    OpenAI postmortem - a rule that discarded a document because its subject
+    looked familiar. A genuinely new development carries a later date, misses
+    this index, and goes to review like anything else.
+    """
+    index = set()
+    for e in entries:
+        urls = [e.get("source", ""), *(e.get("matches") or [])]
+        for key in keys_for(str(e["company"]), str(e["title"]), urls) | {norm(e["id"])}:
+            index.add((key, e["date"]))
+    return index
+
+
 def fetch_digest(today: date) -> str:
     """The AI StopWatch daily digest, as plain text with its links preserved."""
     if "://" not in DIGEST_FEED or DIGEST_FEED.startswith("file://"):
@@ -339,7 +426,29 @@ def parse_digest(xml: str, today: date) -> str:
     return "\n\n".join(reversed(out))
 
 
-def brief(data: dict, today: date, digest: str) -> str:
+def declined_brief(entries: list[dict]) -> str:
+    """The rulings already made, and what would overturn each one."""
+    if not entries:
+        return ""
+    # Every field read here is guaranteed by load_declined(); this function and
+    # declined_index() previously disagreed about which were optional, so one
+    # missing date crashed the sweep while the other quietly skipped the entry.
+    out = ["\n\nALREADY RULED OUT - considered and deliberately not counted:"]
+    for e in entries:
+        out.append(f"  {e['date']}  {e['company']}: {e['title']}")
+        out.append(f"      why: {' '.join(str(e['why']).split())}")
+        out.append(f"      would reopen: {' '.join(str(e['reopen_if']).split())}")
+    out.append(
+        "\nDo not report these same disclosures again. Report a LATER development "
+        "about one of them without hesitation: the ruling covers the evidence as it "
+        "stood on the date shown, not the subject forever. If the 'would reopen' "
+        "condition has happened, that is a new incident - date it to its own first "
+        "disclosure and judge it on its own merits."
+    )
+    return "\n".join(out)
+
+
+def brief(data: dict, today: date, digest: str, declined: list[dict] | None = None) -> str:
     """What the account already knows, plus the digest to judge."""
     recent = sorted(data["incidents"], key=lambda i: str(i["date"]))[-25:]
     lines = [f"  {i['date']}  tier {i['tier']}  {i['company']}: {i['title']}" for i in recent]
@@ -358,8 +467,9 @@ def brief(data: dict, today: date, digest: str) -> str:
         "that was not part of the original story. Judge the new document on its own "
         "merits and date it to its own first disclosure. Do not wave something away as "
         "\"a fresh angle on an existing entry\" when the company has just admitted "
-        "something new about itself.\n\n"
-        "THE DIGEST FOLLOWS. Everything below is the source material.\n\n" + digest
+        "something new about itself."
+        + declined_brief(declined or []) +
+        "\n\nTHE DIGEST FOLLOWS. Everything below is the source material.\n\n" + digest
     )
 
 
@@ -426,6 +536,21 @@ def qualifies(f: dict, today: date, ids: set[str]) -> tuple[bool, str]:
     if slug(f["company"], f["title"], set()) in ids:
         return False, "already logged"
     return True, ""
+
+
+def previously_declined(f: dict, index: set[tuple[str, str]]) -> bool:
+    """True when this is the same disclosure a human has already ruled out.
+
+    Both halves of the key must match. A later disclosure about the same
+    subject is a different date, so it is not caught here and is judged
+    normally - see declined.yaml's reopen_if.
+    """
+    when = iso_day(f.get("date", ""))
+    if not when:
+        return False
+    urls = [f.get("digest_url", ""), *(s.get("url", "") for s in f.get("sources", []) or [])]
+    return any((k, when) in index
+               for k in keys_for(f.get("company", ""), f.get("title", ""), urls))
 
 
 # ── the call ─────────────────────────────────────────────────────────────────
@@ -525,12 +650,14 @@ def main() -> None:
     today = date.fromisoformat(a.today) if a.today else datetime.now(TZ).date()
     data = load()
     ids, newest = known(data)
+    declined = load_declined()
+    ruled_out = declined_index(declined)
     OUT.mkdir(exist_ok=True)
 
     if a.replay:
         result = json.loads(Path(a.replay).read_text(encoding="utf-8"))
     else:
-        result = research(brief(data, today, fetch_digest(today)))
+        result = research(brief(data, today, fetch_digest(today), declined))
         (OUT / "detection.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
 
     print(f"sweep notes: {result.get('sweep_notes', '')}\n")
@@ -538,10 +665,29 @@ def main() -> None:
     if not findings:
         print("nothing found")
         (OUT / "review.json").write_text("[]", encoding="utf-8")
+        (OUT / "ruled-out.json").write_text("[]", encoding="utf-8")
         return
 
+    # A ruling already made does not go back in the queue. Held findings open a
+    # review issue every sweep, so without this a settled question arrives as a
+    # fresh issue every morning until it ages out, and a queue that cries wolf
+    # daily stops being read. It is still printed and still in the artifact, so
+    # it is set aside in the open, not dropped.
+    #
+    # Printed in its own pass BEFORE anything else: the review issue is built by
+    # sed'ing from the first [HOLD to end of log, so a ruled-out block emitted
+    # after a held one would be pasted into the issue it exists to stay out of -
+    # and whether it was depended on the order the model happened to answer in.
+    settled = {i for i, f in enumerate(findings) if previously_declined(f, ruled_out)}
+    again = [findings[i] for i in sorted(settled)]
+    for f in again:
+        print(f"[RULED OUT] {f['date']} {f['company']}: {f['title']}")
+        print("            already declined by hand; see declined.yaml\n")
+
     accepted, held = [], []
-    for f in findings:
+    for i, f in enumerate(findings):
+        if i in settled:
+            continue
         ok, why = qualifies(f, today, ids)
         label = "ACCEPT" if ok else f"HOLD ({why})"
         print(f"[{label}] {f['date']} tier {f['tier']} {f['company']}: {f['title']}")
@@ -558,9 +704,17 @@ def main() -> None:
         print(f"DETECTOR_MODE={MODE}: everything goes to review.")
 
     (OUT / "review.json").write_text(json.dumps(held, indent=2), encoding="utf-8")
+    (OUT / "ruled-out.json").write_text(json.dumps(again, indent=2), encoding="utf-8")
+    if again:
+        # Name them. This line lands inside the review issue, and saying only
+        # that something was set aside gives the reader no way to check it.
+        which = "; ".join(f"{f['date']} {f['company']}: {f['title']}" for f in again)
+        print(f"{len(again)} finding(s) matched an existing ruling in declined.yaml "
+              f"and were not re-raised: {which}")
 
     if a.dry_run:
-        print(f"dry run: would append {len(accepted)}, hold {len(held)}")
+        print(f"dry run: would append {len(accepted)}, hold {len(held)}, "
+              f"set aside {len(again)}")
         return
 
     if accepted:

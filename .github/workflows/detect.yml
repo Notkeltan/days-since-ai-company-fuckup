@@ -54,12 +54,23 @@ jobs:
             python detect.py | tee /tmp/sweep.txt
           fi
 
-      # The full model response, kept for auditing a sweep that got it wrong.
+      # A set-aside finding opens no issue by design, so the run page is where
+      # it has to be legible. Free to write, and it means a ruling that fired
+      # wrongly is one click away rather than buried in a downloadable artifact.
+      - name: note anything an existing ruling set aside
+        if: always()
+        run: python scripts/summarise_ruled_out.py >> "$GITHUB_STEP_SUMMARY"
+
+      # The full model response, kept for auditing a sweep that got it wrong,
+      # alongside anything an existing ruling set aside - which opens no issue,
+      # so the artifact is where it stays visible.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: detection-${{ github.run_id }}
-          path: out/detection.json
+          path: |
+            out/detection.json
+            out/ruled-out.json
           if-no-files-found: ignore
           retention-days: 90
 

@@ -1,0 +1,59 @@
+# Candidates considered and deliberately not counted.
+#
+# The counter's only asset is being right and even-handed, so what it declined
+# to post belongs in the record alongside what it posted. Anyone can check the
+# calls that went against a story, not just the ones that went for it.
+#
+# This file also does a job. Held findings open a review issue every sweep, so
+# without it a candidate that has already been ruled on comes back every single
+# morning until it ages out - and a daily issue nobody needs is how a review
+# queue stops being read.
+#
+# reopen_if is the load-bearing field. An entry here is declined on the evidence
+# as it stood on `decided`, not forever: a later development is a NEW incident
+# and gets judged on its own merits. Blanket-suppressing a subject would repeat
+# the mistake that lost the OpenAI postmortem, where a rule threw away a
+# document in which a company admitted something new, because the subject looked
+# familiar.
+#
+# detect.py enforces the narrow reading in code. A finding is set aside only
+# when its first-disclosure DATE matches an entry below AND it is recognisably
+# the same disclosure - the same company and full title, or a URL the two share.
+# Matching on a URL matters because the title is written by the model and would
+# otherwise be re-worded into a miss; matching on the FULL title matters because
+# a truncated one would collide with a different story published the same day.
+# Add a `matches:` list of extra URLs to an entry if one keeps slipping past.
+#
+# Every field except `matches` and `source_note` is required, and the date must
+# be yyyy-mm-dd. detect.py refuses to start otherwise rather than loading a
+# ruling that could never fire.
+
+declined:
+  - id: openai-astra-opaque-reasoning
+    date: 2026-09-01
+    company: "OpenAI"
+    decided: 2026-09-05
+    decided_by: keltan
+    title: "OpenAI's Astra reasons partly in latent space, weakening the chain-of-thought its own hack investigation relied on"
+    why: >
+      Nothing had gone wrong and OpenAI had not apologised for anything. The
+      reporting described an architecture choice in an unreleased model:
+      recurrent depth, which moves part of the model's reasoning out of legible
+      chain-of-thought. OpenAI said it had limited the technique so Astra still
+      emits a legible chain-of-thought, and announced extra monitoring to ship
+      alongside it. The stated worry was about other developers who might not
+      impose the same limits, which is a forecast about third parties rather
+      than a thing this company did. Redwood Research's Ryan Greenblatt, who
+      co-investigated the July Hugging Face breakout, went on the record against
+      it, and that is real expert alarm about a trajectory - but the sign says a
+      company did something it had to apologise for, and this was not that.
+    reopen_if: >
+      Astra ships and its reasoning turns out to be less legible than OpenAI
+      said it would be, or the promised monitoring does not arrive, or OpenAI
+      apologises for or walks back the decision. Any of those is a new incident
+      with its own first-disclosure date and gets judged from scratch.
+    source: "https://www.reuters.com/legal/litigation/openai-launches-new-astra-model-amid-growing-scrutiny-over-agents-safety-2026-09-03/"
+    source_note: >
+      The story that prompted this was The Information, 2026-09-02, which is
+      paywalled; it was read from a PDF rather than a link. The Reuters piece
+      above covers the same launch and is publicly readable.
