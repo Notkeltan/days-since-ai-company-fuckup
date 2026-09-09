@@ -198,7 +198,9 @@ def render(days: int, *, record: int | None = None, last: str | None = None,
     d.text(((W - nw) / 2, by0 + (box_h - nh) / 2 - nb[1]), num, font=f_num, fill=accent)
 
     # main line
-    prefix = "DAYS SINCE THE LAST MAJOR AI COMPANY "
+    # "1 DAYS" is the kind of thing that gets the whole sign dismissed as slop,
+    # and a back-dated reset lands on 1 often enough to matter.
+    prefix = f"{'DAY' if days == 1 else 'DAYS'} SINCE THE LAST MAJOR AI COMPANY "
     f_main = fit(d, (prefix + noun_sign).replace(BAR, "UC"), "Anton-Regular.ttf", W - 200, 92, min_size=48)
     draw_censored(d, W / 2, 590, prefix + noun_sign, f_main, BLACK, anchor="m")
 
@@ -206,7 +208,8 @@ def render(days: int, *, record: int | None = None, last: str | None = None,
     f_lab = font("Oswald-Bold.ttf", 28, 500)
     fy = 672
     if not somber and record is not None:
-        d.text((110, fy), f"PREVIOUS RECORD: {record} DAYS", font=f_lab, fill=GREY, anchor="lm")
+        d.text((110, fy), f"PREVIOUS RECORD: {record} DAY{'' if record == 1 else 'S'}",
+               font=f_lab, fill=GREY, anchor="lm")
     if last:
         draw_censored(d, W - 110, fy, f"LAST {noun_sign}: {last}", f_lab, GREY, anchor="r")
 

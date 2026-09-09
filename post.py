@@ -102,11 +102,39 @@ def days_word(n: int) -> str:
     return f"{n} day" if n == 1 else f"{n} days"
 
 
-def streaks(resetting: list[Incident]) -> list[tuple[int, Incident, Incident]]:
-    """(length, from, to) for every completed streak between resets."""
+def reset_day(inc: Incident, state: dict) -> date:
+    """The day the sign was flipped for this incident.
+
+    A real "days since" sign is a ritual object, not a calculation. An accident
+    on Monday that the foreman hears about on Tuesday puts the sign to 0 on
+    Tuesday; the incident log still says Monday, and nobody thinks the sign is
+    lying. This account works the same way, so the number always starts at 0 and
+    only ever ticks up by one a day.
+
+    The first version counted from first disclosure instead, which meant a reset
+    found a day late opened at 1 and the counter went 9 → 1 without ever showing
+    zero - losing the one moment the whole format exists for. The incident's own
+    date is untouched: it stays in incidents.yaml, on the sign's footer, and in
+    the published history, because that is the fact about the world.
+
+    Incidents the account was not around for have no recorded reset, so their
+    disclosure date is the best available stand-in.
+    """
+    when = (state.get("reset_on") or {}).get(inc.id)
+    return date.fromisoformat(when) if when else inc.date
+
+
+def streaks(resetting: list[Incident], state: dict | None = None) -> list[tuple[int, Incident, Incident]]:
+    """(length, from, to) for every completed streak between resets.
+
+    Measured between reset days, so a streak is the highest number the sign
+    actually reached - the same quantity the counter shows, not a second one
+    computed a different way.
+    """
+    state = state or {}
     out = []
     for a, b in zip(resetting, resetting[1:]):
-        out.append(((b.date - a.date).days, a, b))
+        out.append(((reset_day(b, state) - reset_day(a, state)).days, a, b))
     return out
 
 
@@ -127,27 +155,21 @@ def daily_text(days: int, record: int | None, is_new_record: bool, record_from: 
     return clip(f"{head}\n\nPrevious record: {days_word(record)}.")
 
 
-def reset_text(inc: Incident, streak: int, record: int | None, days_now: int) -> str:
+def reset_text(inc: Incident, streak: int, record: int | None, today: date | None = None) -> str:
     if inc.tone == "somber":
         # No jokes, no record-keeping flourish, no image.
         return clip(f"Counter reset.\n\n{inc.company}: {inc.title}")
-    if days_now:
-        # Back-dated: incidents are dated to first disclosure, and the detector
-        # can surface one days after the fact. Saying "reset to 0" then would be
-        # a lie by a fortnight, so the post owns the gap instead.
-        body = (f"Counter reset to {days_now}.\n\n{inc.company}: {inc.title}\n\n"
-                f"First disclosed {inc.date.isoformat()}. The streak ended there, "
-                f"at {days_word(streak)}.")
-        if record is not None and streak <= record:
-            body += f" Previous record stands at {days_word(record)}."
-        elif record is not None:
-            body += " That was a new record."
-        return clip(body)
-    body = f"Counter reset to 0.\n\n{inc.company}: {inc.title}\n\nStreak ended at {days_word(streak)}."
+    body = f"Counter reset to 0.\n\n{inc.company}: {inc.title}\n\n"
+    # The sign is flipped today; the incident is dated to when it first became
+    # public, and those are often different days. Say so rather than leaving a
+    # reader to find the gap and assume one of the two numbers is wrong.
+    if today and inc.date != today:
+        body += f"First disclosed {inc.date.isoformat()}. "
+    body += f"Streak ended at {days_word(streak)}."
     if record is not None and streak <= record:
         body += f" Previous record stands at {days_word(record)}."
     elif record is not None and streak > record:
-        body += f" That was a new record."
+        body += " That was a new record."
     return clip(body)
 
 
@@ -395,13 +417,22 @@ def main() -> None:
         resets_seen.append(latest.id)
     show_record = len(resets_seen) >= 2
 
-    done = streaks(resetting)
+    # The sign is flipped the day the account announces the reset, so record that
+    # before anything reads it. Written for a dry run too - it only lives in
+    # memory there, and the preview has to show the number the real post would.
+    reset_on = dict(state.get("reset_on") or {})
+    if is_reset:
+        reset_on.setdefault(latest.id, today.isoformat())
+    state["reset_on"] = reset_on
+
+    done = streaks(resetting, state)
     record = max((s[0] for s in done), default=None) if show_record else None
     record_from = None
     if record is not None:
         rs = max(done, key=lambda s: s[0])
         record_from = f"{rs[1].date.isoformat()} → {rs[2].date.isoformat()}"
-    days = max(0, (today - latest.date).days)  # future-dated entries count as day 0
+    # From the reset day, not the disclosure date: a reset always opens at 0.
+    days = max(0, (today - reset_day(latest, state)).days)
     is_new_record = record is not None and days > record and not state.get("record_announced_for") == latest.id
 
     OUT.mkdir(exist_ok=True)
@@ -431,16 +462,17 @@ def main() -> None:
     if is_reset:
         # ── RESET ──
         prev = next(i for i in resetting if i.id == state["last_incident_id"])
-        streak = (latest.date - prev.date).days
+        streak = (reset_day(latest, state) - reset_day(prev, state)).days
         prior_record = max((s[0] for s in done if s[2].id != latest.id), default=None) if show_record else None
-        text = reset_text(latest, streak, prior_record, days)
+        text = reset_text(latest, streak, prior_record, today)
         img = None
         alt = ""
         if latest.tone != "somber":
             img = OUT / "reset.png"
-            # `days`, not 0 - the sign has to agree with the incident's date
+            # `days` is 0 here by construction: reset_day() is today. Passed
+            # through rather than hard-coded so the two can never disagree.
             render(days, record=prior_record, last=last_label, last_title=latest.title, handle=HANDLE, censor=censor).save(img)
-            alt = (f"Workplace-safety-style sign reading: This industry has gone {days} days since the last major AI company {NOUN}. "
+            alt = (f"Workplace-safety-style sign reading: This industry has gone {days_word(days)} since the last major AI company {NOUN}. "
                    + (f"Previous record: {prior_record} days. " if prior_record is not None else "")
                    + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
@@ -463,7 +495,7 @@ def main() -> None:
         text = daily_text(days, record, is_new_record, record_from)
         img = OUT / "sign.png"
         render(days, record=record, last=last_label, last_title=latest.title, handle=HANDLE, censor=censor).save(img)
-        alt = (f"Workplace-safety-style sign reading: This industry has gone {days} days since the last major AI company {NOUN}. "
+        alt = (f"Workplace-safety-style sign reading: This industry has gone {days_word(days)} since the last major AI company {NOUN}. "
                + (f"Previous record: {record} days. " if record is not None else "")
                + f"Last {NOUN}: {last_label} — {latest.title}")
         root = poster.post(text, img, alt)
@@ -505,6 +537,7 @@ def main() -> None:
         "last_post_date": today.isoformat(),
         "known_ids": sorted({i.id for i in incidents} - failed),
         "resets_seen": resets_seen,
+        "reset_on": reset_on,
         "posts": posts,
     })
     if not a.dry_run:

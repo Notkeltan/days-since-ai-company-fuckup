@@ -42,26 +42,26 @@ def main() -> None:
     latest = resetting[-1]
     state = counter.load_state()
 
-    done = counter.streaks(resetting)
+    done = counter.streaks(resetting, state)
     record = max((s[0] for s in done), default=None)
     if len(state.get("resets_seen", [])) < 2:
         record = None          # same gate as the daily post: no record until two
-    days = max(0, (today - latest.date).days)
+    days = max(0, (today - counter.reset_day(latest, state)).days)
 
     censor = "incident" if latest.tone == "somber" else counter.CENSOR
     counter.NOUN = counter.noun_forms(censor)[1]
     last_label = f"{latest.date.isoformat()} · {latest.company}"
 
     prev = resetting[-2] if len(resetting) > 1 else None
-    streak = (latest.date - prev.date).days if prev else 0
-    text = counter.reset_text(latest, streak, record, days)
+    streak = (counter.reset_day(latest, state) - counter.reset_day(prev, state)).days if prev else 0
+    text = counter.reset_text(latest, streak, record, today)
 
     counter.OUT.mkdir(exist_ok=True)
     img = counter.OUT / "reset.png"
     counter.render(days, record=record, last=last_label, last_title=latest.title,
                    handle=counter.HANDLE, censor=censor).save(img)
-    alt = (f"Workplace-safety-style sign reading: This industry has gone {days} days "
-           f"since the last major AI company {counter.NOUN}. "
+    alt = (f"Workplace-safety-style sign reading: This industry has gone "
+           f"{counter.days_word(days)} since the last major AI company {counter.NOUN}. "
            + (f"Previous record: {record} days. " if record is not None else "")
            + f"Last {counter.NOUN}: {last_label} — {latest.title}")
 

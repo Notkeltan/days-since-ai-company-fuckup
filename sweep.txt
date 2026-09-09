@@ -1,0 +1,12 @@
+sweep notes: reviewed 41 items from the digest.
+
+[RULED OUT] 2026-08-30 OpenAI: Astra rollout complaints
+            already declined by hand; see declined.yaml
+
+[HOLD (one independent source)] 2026-09-04 tier 2 Meta: chatbot leak
+         1 independent, reported, medium confidence
+         reasoning here
+         - primary https://example.com/a
+
+1 finding(s) matched an existing ruling and were not re-raised.
+0 held for review

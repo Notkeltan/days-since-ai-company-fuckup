@@ -123,7 +123,12 @@ def load_posts() -> dict:
             # Which resets the account actually announced. Needed because an
             # incident's date is its FIRST DISCLOSURE, which can predate the
             # account even when a post about it exists.
-            "resets_seen": s.get("resets_seen") or []}
+            "resets_seen": s.get("resets_seen") or [],
+            # The day the sign was flipped for each incident. The counter runs
+            # from here, not from the disclosure date, so a reset always opens
+            # at 0 - see reset_day() in post.py. The site has to use the same
+            # rule or it contradicts the account it is publishing.
+            "reset_on": s.get("reset_on") or {}}
 
 
 def post_url(rec: dict | None) -> str | None:
@@ -205,18 +210,23 @@ def load(today: date) -> dict:
         })
     incidents.sort(key=lambda i: i["date"])
 
+    posts = load_posts()
+
+    def flipped(i: dict) -> date:
+        """The day the sign was reset for this incident; its disclosure date
+        for anything the account was not around to announce."""
+        return date.fromisoformat(posts["reset_on"].get(i["id"]) or i["date"])
+
     resets = [i for i in incidents if i["resets"]]
     latest = resets[-1]
-    days = max(0, (today - date.fromisoformat(latest["date"])).days)
+    days = max(0, (today - flipped(latest)).days)
 
     streaks = [
-        {"days": (date.fromisoformat(b["date"]) - date.fromisoformat(a["date"])).days,
+        {"days": (flipped(b) - flipped(a)).days,
          "from": a["date"], "to": b["date"], "ended_by": b["id"]}
         for a, b in zip(resets, resets[1:])
     ]
     record = max(streaks, key=lambda s: s["days"]) if streaks else None
-
-    posts = load_posts()
     for i in incidents:
         i["object_class"] = object_class(i, i["id"] == latest["id"])
         i["post"] = post_for(i, posts, i["id"] == latest["id"])
