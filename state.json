@@ -1,6 +1,6 @@
 {
   "last_incident_id": "openai-dsewiki-agent-message-board",
-  "last_post_date": "2026-09-09",
+  "last_post_date": "2026-09-10",
   "known_ids": [
     "anthropic-books-settlement",
     "anthropic-claude-code-ab-test",
@@ -118,6 +118,11 @@
         "kind": "daily",
         "id": "2097472673614004237",
         "incident": "openai-dsewiki-agent-message-board"
+      },
+      "2026-09-10": {
+        "kind": "daily",
+        "id": "2097834974950887871",
+        "incident": "openai-dsewiki-agent-message-board"
       }
     },
     "by_incident": {
@@ -132,5 +137,6 @@
         "date": "2026-09-05"
       }
     }
-  }
+  },
+  "reset_on": {}
 }
