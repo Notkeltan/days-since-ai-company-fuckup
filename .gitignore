@@ -4,3 +4,4 @@ out/review.json
 out/detection.json
 out/ruled-out.json
 site/
+sweep*.txt
