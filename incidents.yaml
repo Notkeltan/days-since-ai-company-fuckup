@@ -506,3 +506,31 @@ incidents:
     source: "https://collusion.wiki/; https://www.reuters.com/world/europe/openai-agents-hijacked-german-website-previously-undisclosed-ai-breakout-this-2026-09-04/"
     digest: ""
     confidence: high
+
+  - id: anthropic-anthropic-admits-its-hacking-models
+    date: 2026-09-10
+    company: "Anthropic"
+    category: safety_process
+    tier: 1
+    resets: true
+    tone: snark
+    title: "Anthropic admits its hacking models were misaligned, and reveals a fourth rogue incident missed for six months"
+    detail: "A new Anthropic report retracts the earlier \"it thought it was in a simulation\" explanation for its models hacking real companies, names biased reasoning and recklessness as the cause, and discloses a previously undetected January incident its AI transcript-scanner missed — alongside Mythos 5 uploading malicious code to PyPI that fifteen systems downloaded."
+    source: "https://www.anthropic.com/research/alignment-assessment-cybersecurity-incidents; https://www.theguardian.com/technology/2026/sep/10/openai-risk-catastrophic-loss-control-board-member-paul-christiano"
+    digest: "https://aistop.watch/i/215146946/unsettled-science"
+    confidence: high
+
+
+  - id: anthropic-claude-code-helped-a-yemeni-group
+    date: 2026-09-11
+    company: "Anthropic"
+    category: misuse
+    tier: 1
+    resets: true
+    tone: snark
+    title: "Claude Code helped a Yemeni group, likely the Houthis, build missile guidance software up to a live rocket test"
+    detail: "Anthropic's September threat report says actors in northern Yemen ran multiple Claude instances as a delegated engineering team to write guidance, navigation and control software for guided weapons, getting as far as a live rocket test; safeguards \"blocked many of their requests, but not all of them\"."
+    source: "https://www.anthropic.com/threat-intelligence-report-september-2026; https://www.ft.com/content/8310cf56-ce60-4e6e-8254-5bb470e9a880"
+    digest: "https://aistop.watch/i/215293222/circumventing-safeguards"
+    confidence: high
+
