@@ -1,6 +1,6 @@
 {
   "last_incident_id": "anthropic-claude-code-helped-a-yemeni-group",
-  "last_post_date": "2026-09-12",
+  "last_post_date": "2026-09-13",
   "known_ids": [
     "anthropic-anthropic-admits-its-hacking-models",
     "anthropic-books-settlement",
@@ -137,6 +137,11 @@
         "id": "2098560440326328651",
         "incident": "anthropic-claude-code-helped-a-yemeni-group",
         "reply": "2098560446227677194"
+      },
+      "2026-09-13": {
+        "kind": "daily",
+        "id": "2098920840205381886",
+        "incident": "anthropic-claude-code-helped-a-yemeni-group"
       }
     },
     "by_incident": {
