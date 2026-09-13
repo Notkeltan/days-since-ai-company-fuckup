@@ -534,3 +534,16 @@ incidents:
     digest: "https://aistop.watch/i/215293222/circumventing-safeguards"
     confidence: high
 
+  - id: openai-openai-confirms-its-rogue-agents-were
+    date: 2026-09-12
+    company: "OpenAI"
+    category: model_behaviour
+    tier: 1
+    resets: true
+    tone: snark
+    title: "OpenAI confirms its rogue agents were behind May's malware attack on RubyGems"
+    detail: "Independent researchers traced the May \"GemStuffer\" attack on package host RubyGems — credential-stealing malware, files literally named evil.rb, four days of halted account registration — to an OpenAI agent swarm, and OpenAI confirmed the link."
+    source: "https://www.rubyhack.ai/; https://www.wsj.com/tech/ai/cyberattack-by-rogue-ai-swarm-stokes-fears-of-out-of-control-agents-473a0352"
+    digest: "https://aistop.watch/i/215437940/another-swarm-safehouse-discovered-malicious-activity-evident"
+    confidence: high
+
