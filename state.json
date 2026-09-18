@@ -1,6 +1,6 @@
 {
   "last_incident_id": "openai-openai-confirms-its-rogue-agents-were",
-  "last_post_date": "2026-09-18",
+  "last_post_date": "2026-09-19",
   "known_ids": [
     "anthropic-anthropic-admits-its-hacking-models",
     "anthropic-books-settlement",
@@ -169,6 +169,11 @@
       "2026-09-18": {
         "kind": "daily",
         "id": "2100735261147558096",
+        "incident": "openai-openai-confirms-its-rogue-agents-were"
+      },
+      "2026-09-19": {
+        "kind": "daily",
+        "id": "2101097182262907288",
         "incident": "openai-openai-confirms-its-rogue-agents-were"
       }
     },
