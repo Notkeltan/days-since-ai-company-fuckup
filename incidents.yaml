@@ -547,3 +547,16 @@ incidents:
     digest: "https://aistop.watch/i/215437940/another-swarm-safehouse-discovered-malicious-activity-evident"
     confidence: high
 
+  - id: openai-three-researchers-chained-an-sso-flaw
+    date: 2026-09-17
+    company: "OpenAI"
+    category: security_privacy
+    tier: 2
+    resets: false
+    tone: snark
+    title: "Three researchers chained an SSO flaw into OpenAI employee account takeover and repo access in under 72 hours"
+    detail: "Hacktron AI used an image-decoder bug plus a malformed single sign-on to reach OpenAI's help forum, ChatGPT and Codex accounts and connected GitHub, Slack and email; OpenAI paid $6,500."
+    source: "https://www.hacktron.ai/blog/hacking-openai; https://www.theguardian.com/technology/2026/sep/18/openai-hacked-anthropic-claude-chatbot"
+    digest: "https://aistop.watch/i/216371075/small-team-exposes-massive-gap-in-openai-cybersecurity"
+    confidence: high
+
