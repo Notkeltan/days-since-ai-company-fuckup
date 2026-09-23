@@ -1,6 +1,6 @@
 {
   "last_incident_id": "openai-openai-confirms-its-rogue-agents-were",
-  "last_post_date": "2026-09-23",
+  "last_post_date": "2026-09-24",
   "known_ids": [
     "anthropic-anthropic-admits-its-hacking-models",
     "anthropic-books-settlement",
@@ -29,6 +29,7 @@
     "grok-white-genocide",
     "meta-ai-child-guidelines",
     "meta-ai-discover-feed",
+    "meta-meta-s-muse-ai-assistant-shipped-with-a",
     "meta-project-cannes",
     "meta-support-bot-instagram-takeovers",
     "openai-2023-hack-undisclosed",
@@ -196,6 +197,11 @@
         "kind": "daily",
         "id": "2102548470552723467",
         "incident": "openai-openai-confirms-its-rogue-agents-were"
+      },
+      "2026-09-24": {
+        "kind": "daily",
+        "id": "2102909709661425855",
+        "incident": "openai-openai-confirms-its-rogue-agents-were"
       }
     },
     "by_incident": {
@@ -223,6 +229,11 @@
         "kind": "mention",
         "id": "2101453139748553044",
         "date": "2026-09-20"
+      },
+      "meta-meta-s-muse-ai-assistant-shipped-with-a": {
+        "kind": "mention",
+        "id": "2102909715516637225",
+        "date": "2026-09-24"
       }
     }
   },
