@@ -560,3 +560,16 @@ incidents:
     digest: "https://aistop.watch/i/216371075/small-team-exposes-massive-gap-in-openai-cybersecurity"
     confidence: high
 
+  - id: meta-meta-s-muse-ai-assistant-shipped-with-a
+    date: 2026-09-21
+    company: "Meta"
+    category: security_privacy
+    tier: 2
+    resets: false
+    tone: snark
+    title: "Meta's Muse AI assistant shipped with a zero-day letting an attacker hijack the agent across all a user's devices"
+    detail: "Two weeks after launch, a security researcher published a working proof-of-concept showing malware on a Mac could take over Meta's Muse agent — and with it the camera, mic, calendar, email and purchases Muse had been granted — on every device tied to the account; Meta hotfixed it overnight while calling the practical risk \"quite low\"."
+    source: "https://github.com/pwardle/not-a-mused; https://gizmodo.com/meta-just-patched-a-major-zero-day-vulnerability-in-its-muse-ai-assistant-2000815429; https://x.com/dps/status/2102248329111634067"
+    digest: "https://aistop.watch/i/216993041/metas-muse-was-unsafe-to-use"
+    confidence: high
+
