@@ -662,6 +662,19 @@ def main() -> None:
 
     print(f"sweep notes: {result.get('sweep_notes', '')}\n")
     findings = result.get("findings", [])
+    # The schema says every finding is an object, and on 2026-09-22 one came back
+    # as a bare string. Every reader here calls .get() on it, so the whole sweep
+    # died on an AttributeError and a real Google/Gemini candidate the model had
+    # already written up went in the bin with it. One malformed element must cost
+    # that element, not the day - but loudly, because a finding dropped in silence
+    # is the failure this detector exists to avoid.
+    malformed = [f for f in findings if not isinstance(f, dict)]
+    if malformed:
+        findings = [f for f in findings if isinstance(f, dict)]
+        print(f"[warn] discarded {len(malformed)} finding(s) that were not objects; "
+              f"the model's own notes above may describe what was lost", file=sys.stderr)
+        for f in malformed:
+            print(f"[warn]   {str(f)[:300]}", file=sys.stderr)
     if not findings:
         print("nothing found")
         (OUT / "review.json").write_text("[]", encoding="utf-8")
