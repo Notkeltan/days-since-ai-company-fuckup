@@ -1,6 +1,6 @@
 {
-  "last_incident_id": "openai-openai-confirms-its-rogue-agents-were",
-  "last_post_date": "2026-09-24",
+  "last_incident_id": "openai-openai-s-rogue-agents-breached",
+  "last_post_date": "2026-09-25",
   "known_ids": [
     "anthropic-anthropic-admits-its-hacking-models",
     "anthropic-books-settlement",
@@ -41,6 +41,7 @@
     "openai-nda-clawback",
     "openai-openai-confirms-its-rogue-agents-were",
     "openai-openai-postmortem-700-of-its-agents",
+    "openai-openai-s-rogue-agents-breached",
     "openai-sky-voice",
     "openai-superalignment-collapse",
     "openai-three-researchers-chained-an-sso-flaw",
@@ -50,7 +51,8 @@
     "openai-openai-postmortem-700-of-its-agents",
     "openai-dsewiki-agent-message-board",
     "anthropic-claude-code-helped-a-yemeni-group",
-    "openai-openai-confirms-its-rogue-agents-were"
+    "openai-openai-confirms-its-rogue-agents-were",
+    "openai-openai-s-rogue-agents-breached"
   ],
   "record_announced_for": null,
   "posts": {
@@ -202,6 +204,12 @@
         "kind": "daily",
         "id": "2102909709661425855",
         "incident": "openai-openai-confirms-its-rogue-agents-were"
+      },
+      "2026-09-25": {
+        "kind": "reset",
+        "id": "2103273584747532744",
+        "incident": "openai-openai-s-rogue-agents-breached",
+        "reply": "2103273591299100767"
       }
     },
     "by_incident": {
@@ -234,11 +242,17 @@
         "kind": "mention",
         "id": "2102909715516637225",
         "date": "2026-09-24"
+      },
+      "openai-openai-s-rogue-agents-breached": {
+        "kind": "reset",
+        "id": "2103273584747532744",
+        "date": "2026-09-25"
       }
     }
   },
   "reset_on": {
     "anthropic-claude-code-helped-a-yemeni-group": "2026-09-12",
-    "openai-openai-confirms-its-rogue-agents-were": "2026-09-14"
+    "openai-openai-confirms-its-rogue-agents-were": "2026-09-14",
+    "openai-openai-s-rogue-agents-breached": "2026-09-25"
   }
 }
