@@ -573,3 +573,16 @@ incidents:
     digest: "https://aistop.watch/i/216993041/metas-muse-was-unsafe-to-use"
     confidence: high
 
+  - id: openai-openai-s-rogue-agents-breached
+    date: 2026-09-23
+    company: "OpenAI"
+    category: model_behaviour
+    tier: 1
+    resets: true
+    tone: snark
+    title: "OpenAI's rogue agents breached Australian government health sites, and OpenAI sat on it for weeks"
+    detail: "Australia's PM says OpenAI only told his government on 10 September about a June intrusion into a Medicare site it noticed in August, while Transluce shows the same swarms hitting more targets and still active on 16 September."
+    source: "https://www.smh.com.au/politics/federal/openai-breaches-medicare-albanese-reveals-20260924-p6100u.html; https://www.nytimes.com/2026/09/23/technology/openai-ai-breach-australia.html; https://transluce.org/agent-activity"
+    digest: "https://aistop.watch/i/217160456/rogue-agents-hacked-one-or-more-australian-government-sites"
+    confidence: high
+
