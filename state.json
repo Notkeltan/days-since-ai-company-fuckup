@@ -18,6 +18,7 @@
     "gemini-image-gen",
     "gemini-please-die",
     "google-ai-overviews-glue",
+    "google-gemini-irregular-sandbox-breakout",
     "gpt4o-sycophancy-rollback",
     "gpt5-launch-charts",
     "grok-censor-musk-trump",
@@ -213,7 +214,7 @@
       },
       "2026-09-26": {
         "kind": "daily",
-        "id": "2103641264499368353",
+        "id": "2103654001824661526",
         "incident": "openai-openai-s-rogue-agents-breached"
       }
     },
@@ -252,6 +253,11 @@
         "kind": "reset",
         "id": "2103273584747532744",
         "date": "2026-09-25"
+      },
+      "google-gemini-irregular-sandbox-breakout": {
+        "kind": "mention",
+        "id": "2103654005616284051",
+        "date": "2026-09-26"
       }
     }
   },
