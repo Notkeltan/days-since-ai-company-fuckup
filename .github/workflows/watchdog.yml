@@ -9,8 +9,8 @@ name: watchdog
 
 on:
   schedule:
-    - cron: "0 4 * * *"     # 14:00 AEST - an hour after the last posting retry
-    - cron: "0 10 * * *"    # 20:00 AEST - second look before the day is out
+    - cron: "0 9 * * *"     # 19:00 AEST - an hour after the last posting retry
+    - cron: "0 12 * * *"    # 22:00 AEST - second look before the day is out
   workflow_dispatch:
     inputs:
       test:
@@ -56,6 +56,21 @@ jobs:
           behind = (today - last).days
           print(f"stale={'true' if behind >= 1 else 'false'}")
           print(f"detail=last posted {last} ({behind} day(s) ago); today is {today}")
+
+          # Silence is now a legitimate outcome: the daily count is withheld
+          # until the detector has read a digest published today. Say which
+          # kind of quiet this is, so the alert points at the real cause.
+          try:
+              s = json.load(open("sweep.json"))
+              if s.get("digest_local_date") == today.isoformat():
+                  why = "Today's digest is out, so the fault is in the sweep or the post, not the source."
+              else:
+                  why = (f"AI StopWatch has not published for {today} (last dispatch "
+                         f"{s.get('digest_local_date')}), so the count was withheld "
+                         f"rather than claim an all-clear nobody checked.")
+          except Exception:
+              why = "sweep.json is missing, so the detector may not have run at all."
+          print(f"why={why}")
           PY
 
       - name: alert if the counter has gone quiet
@@ -66,7 +81,7 @@ jobs:
           PUSHOVER_SOUND: ${{ vars.PUSHOVER_SOUND }}
         run: |
           bash scripts/alert.sh "Counter has not posted" \
-            "${{ steps.check.outputs.detail }}. Every posting retry for today has been and gone." \
+            "${{ steps.check.outputs.detail }}. ${{ steps.check.outputs.why }}" \
             1 "${{ github.server_url }}/${{ github.repository }}/actions"
 
       - name: say so in the log when all is well

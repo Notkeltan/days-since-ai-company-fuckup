@@ -145,26 +145,34 @@ def post_url(rec: dict | None) -> str | None:
 
 
 def post_for(inc: dict, posts: dict, is_current: bool) -> dict | None:
-    """Three distinct states, deliberately not collapsed into one.
+    """Four distinct states, deliberately not collapsed into one.
 
-    None            no post ever existed - the incident predates the account.
-    url None        a post went out and its address was not recorded.
-    url set         captured.
+    None                 no post ever existed - the incident predates the account.
+    announced False      logged, and the account never said anything about it.
+    url None             a post went out and its address was not recorded.
+    url set              captured.
 
-    Flattening these would claim the archive is more broken than it is.
+    Flattening these would claim the archive is more broken than it is - or, in
+    the "never announced" case, quietly claim a post that was never made.
     """
     kind = "reset" if inc["resets"] else "mention"
     rec = posts["by_incident"].get(inc["id"])
     if rec:
         return {"url": post_url(rec), "kind": rec.get("kind") or kind,
-                "date": rec.get("date"), "captured": bool(post_url(rec))}
+                "date": rec.get("date"), "captured": bool(post_url(rec)),
+                "announced": True}
     # Announced by the account, or still the one on the sign: a post exists, its
     # address just was not kept. NOT the same as no post at all.
     if inc["id"] in posts["resets_seen"] or is_current:
-        return {"url": None, "kind": kind, "date": None, "captured": False}
+        return {"url": None, "kind": kind, "date": None, "captured": False,
+                "announced": True}
     if inc["date"] < POSTING_SINCE:      # ISO strings sort chronologically
         return None                       # predates the account entirely
-    return {"url": None, "kind": kind, "date": None, "captured": False}
+    # Logged while the account was running, but it never posted about this one -
+    # a tier 1 found after the fact, or a sweep that died before it got there.
+    # Saying nothing here would let the archive imply coverage it did not have.
+    return {"url": None, "kind": kind, "date": None, "captured": False,
+            "announced": False}
 
 
 def object_class(inc: dict, is_current: bool) -> str | None:
@@ -347,12 +355,20 @@ def page(d: dict) -> str:
     def post_link(i):
         # Built from a validated id upstream; emit nothing rather than a
         # placeholder, since most rows predate the account entirely.
-        u = (i.get("post") or {}).get("url")
+        p = i.get("post") or {}
+        u = p.get("url")
         # No arrow glyph. Anton and Oswald carry no symbol block, so U+2197
         # rendered as tofu; assert_renderable() below now refuses any character
         # the webfonts cannot draw.
-        return (f' <a href="{e(u)}" rel="noopener" title="the post announcing this">'
-                f'post</a>') if u else ""
+        if u:
+            return (f' <a href="{e(u)}" rel="noopener" title="the post announcing this">'
+                    f'post</a>')
+        # Logged while the account was running and never announced. Saying
+        # nothing would let the table imply the account covered this one.
+        if p.get("announced") is False:
+            return (' <span class="unposted" title="logged after the fact; '
+                    'the account never posted about this one">not announced</span>')
+        return ""
     latest = d["last_reset"]
     rec = d["longest_streak"]
     rows = "\n".join(
@@ -395,6 +411,9 @@ def page(d: dict) -> str:
      ABOUT KELTAN even with the transform off. The font itself had to change. */
   .name {{ text-transform:none; font-family:Oswald,system-ui,sans-serif;
            font-weight:600; letter-spacing:.01em; font-size:1.5rem; }}
+  /* A row the account logged but never posted about. Quiet, but present:
+     leaving it blank would read as coverage the account did not have. */
+  .unposted {{ font-size:.85em; opacity:.6; white-space:nowrap; }}
   .count {{ font-family:Anton,Impact,sans-serif; font-size:clamp(5rem,22vw,12rem);
             color:var(--red); line-height:.9; text-align:center;
             border:8px solid var(--red); background:#fff; padding:.1em .25em;

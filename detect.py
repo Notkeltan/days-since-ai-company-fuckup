@@ -40,7 +40,7 @@ import json
 import os
 import re
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from html import unescape
 from pathlib import Path
@@ -51,8 +51,10 @@ import yaml
 HERE = Path(__file__).resolve().parent
 INCIDENTS = HERE / "incidents.yaml"
 DECLINED = HERE / "declined.yaml"
+SWEEP = HERE / "sweep.json"
 OUT = HERE / "out"
 
+UTC = timezone.utc
 TZ = ZoneInfo(os.environ.get("COUNTER_TZ", "Australia/Sydney"))
 # `or` rather than a get() default: an unset repo variable arrives from Actions
 # as an empty string, not as an absent key, so a default would never apply.
@@ -380,17 +382,51 @@ def declined_index(entries: list[dict]) -> set[tuple[str, str]]:
     return index
 
 
+def fetch_feed() -> str:
+    """The raw AI StopWatch feed."""
+    if "://" not in DIGEST_FEED or DIGEST_FEED.startswith("file://"):
+        return Path(DIGEST_FEED.replace("file://", "")).read_text(encoding="utf-8", errors="replace")
+    import requests
+    r = requests.get(DIGEST_FEED, timeout=60,
+                     headers={"User-Agent": "days-since-counter (github.com/Notkeltan)"})
+    r.raise_for_status()
+    return r.text
+
+
+def newest_dispatch(xml: str) -> datetime | None:
+    """When the most recent dispatch was published, in UTC.
+
+    Not filtered by the lookback window: this answers "is today's digest out
+    yet", which is a question about the feed, not about the sweep.
+    """
+    times = []
+    for raw in re.findall(r"<pubDate>(.*?)</pubDate>", xml, re.S):
+        try:
+            times.append(parsedate_to_datetime(raw.strip()))
+        except (TypeError, ValueError):
+            continue
+    return max(times).astimezone(UTC) if times else None
+
+
+def record_sweep(newest: datetime | None, swept: bool, today: date) -> None:
+    """Leave a note of what the watcher actually read, for post.py to check.
+
+    The counter's daily post asserts that nothing has happened. That assertion
+    is only worth anything if someone looked at today's news first, so the
+    poster refuses to make it until this file says the day's digest was read.
+    """
+    SWEEP.write_text(json.dumps({
+        "ran_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "digest_latest": newest.isoformat(timespec="seconds") if newest else None,
+        "digest_local_date": newest.astimezone(TZ).date().isoformat() if newest else None,
+        "local_date": today.isoformat(),
+        "swept": swept,
+    }, indent=2) + "\n", encoding="utf-8")
+
+
 def fetch_digest(today: date) -> str:
     """The AI StopWatch daily digest, as plain text with its links preserved."""
-    if "://" not in DIGEST_FEED or DIGEST_FEED.startswith("file://"):
-        xml = Path(DIGEST_FEED.replace("file://", "")).read_text(encoding="utf-8", errors="replace")
-    else:
-        import requests
-        r = requests.get(DIGEST_FEED, timeout=60,
-                         headers={"User-Agent": "days-since-counter (github.com/Notkeltan)"})
-        r.raise_for_status()
-        xml = r.text
-    return parse_digest(xml, today)
+    return parse_digest(fetch_feed(), today)
 
 
 def parse_digest(xml: str, today: date) -> str:
@@ -645,6 +681,8 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true", help="research but change nothing")
     ap.add_argument("--replay", help="decide over a saved response instead of calling the API")
     ap.add_argument("--today", help="override today's date (yyyy-mm-dd)")
+    ap.add_argument("--ignore-digest-age", action="store_true",
+                    help="sweep even if today's digest has not been published yet")
     a = ap.parse_args()
 
     today = date.fromisoformat(a.today) if a.today else datetime.now(TZ).date()
@@ -657,7 +695,30 @@ def main() -> None:
     if a.replay:
         result = json.loads(Path(a.replay).read_text(encoding="utf-8"))
     else:
-        result = research(brief(data, today, fetch_digest(today), declined))
+        # Wait for the day's digest before spending a sweep on it.
+        #
+        # AI StopWatch lands in Sydney somewhere between 07:36 and 11:07, median
+        # 10:10, while the crons fired from 07:30. So on most days the detector
+        # was reading yesterday's dispatch, finding yesterday's news, and the
+        # counter then announced an all-clear over the top of a story that was
+        # leading the news - the Medicare breach among them. Sweeping stale
+        # material is worse than not sweeping: it costs a sweep AND it produces
+        # a confident "nothing found" about a day nobody has looked at.
+        xml = fetch_feed()
+        latest = newest_dispatch(xml)
+        if latest is None:
+            record_sweep(None, swept=False, today=today)
+            raise RuntimeError("no dated dispatches in the feed; has its format changed?")
+        arrived = latest.astimezone(TZ)
+        if arrived.date() < today and not a.ignore_digest_age:
+            record_sweep(latest, swept=False, today=today)
+            print(f"today's digest is not out yet: newest dispatch arrived "
+                  f"{arrived:%Y-%m-%d %H:%M %Z}, local date is {today}.")
+            print("nothing swept, nothing spent; a later run today will pick it up.")
+            return
+        record_sweep(latest, swept=True, today=today)
+        print(f"digest for {today} is out (arrived {arrived:%H:%M %Z}); sweeping.\n")
+        result = research(brief(data, today, parse_digest(xml, today), declined))
         (OUT / "detection.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
 
     print(f"sweep notes: {result.get('sweep_notes', '')}\n")

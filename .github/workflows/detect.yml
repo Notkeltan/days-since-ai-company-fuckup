@@ -11,7 +11,15 @@ name: detect incidents
 
 on:
   schedule:
-    - cron: "30 21 * * *"       # 07:30 AEST, half an hour before the daily post
+    # AI StopWatch lands in Sydney between 07:36 and 11:07, median 10:10, and
+    # GitHub fires crons late and unpredictably. So these are attempts, not
+    # sweeps: detect.py checks the feed first and returns without spending
+    # anything until the day's dispatch is actually there.
+    - cron: "0 22 * * *"        # 08:00 AEST
+    - cron: "30 23 * * *"       # 09:30 AEST
+    - cron: "0 1 * * *"         # 11:00 AEST
+    - cron: "30 2 * * *"        # 12:30 AEST
+    - cron: "0 5 * * *"         # 15:00 AEST - last chance for the same local day
   workflow_dispatch:
     inputs:
       dry_run:
@@ -80,21 +88,43 @@ jobs:
         run: |
           git config user.name "counter-bot"
           git config user.email "bot@users.noreply.github.com"
+          # sweep.json is how post.py knows a human-facing all-clear has been
+          # earned. Only commit it on a real sweep - a run that found the
+          # digest missing has nothing to report and should leave no trace.
+          swept=$(python -c "import json;print(str(json.load(open('sweep.json'))['swept']).lower())" 2>/dev/null || echo false)
+          echo "swept=$swept" >> "$GITHUB_OUTPUT"
+          # Decide what changed BEFORE committing. Comparing HEAD~1 afterwards
+          # reads the wrong pair of commits on a run that committed nothing.
           git add incidents.yaml
-          if git diff --cached --quiet; then
+          if git diff --cached --quiet -- incidents.yaml; then
             echo "nothing accepted"
+          else
+            echo "appended=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$swept" = "true" ]; then
+            git add sweep.json
+          fi
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
           else
             git commit -m "detect: $(date -u +%F)"
             git pull --rebase --autostash
             git push
-            echo "appended=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Post immediately after a sweep rather than waiting for the poster's own
+      # cron: the sweep is what unlocks the daily count, so the two should move
+      # together. on_new for an append (that is a reset), plain otherwise.
       - name: dispatch the poster
-        if: steps.commit.outputs.appended == 'true'
+        if: steps.commit.outputs.swept == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run daily.yml -f dry_run=false -f on_new=true
+        run: |
+          if [ "${{ steps.commit.outputs.appended }}" = "true" ]; then
+            gh workflow run daily.yml -f dry_run=false -f on_new=true
+          else
+            gh workflow run daily.yml -f dry_run=false -f on_new=false
+          fi
 
       - name: open a review issue for anything held back
         if: github.event.inputs.dry_run != 'true'

@@ -180,6 +180,29 @@ admitted its safeguards had not been switched on. A later disclosure is a new
 incident when it discloses something materially new in its own right, and it is
 dated to its own first disclosure.
 
+**The counter waits for the digest.** The daily post asserts that nothing has
+happened, and that assertion is only worth making if somebody looked first. AI
+StopWatch lands in Sydney between 07:36 and 11:07, median 10:10, while the crons
+used to fire from 07:30 — so on most days the detector read *yesterday's*
+dispatch and the account announced an all-clear over the top of whatever was
+leading the news that morning. The Medicare breach went out that way.
+
+Now `detect.py` checks the feed before spending anything: if today's dispatch is
+not there it records that and exits, costing nothing, and a later attempt picks
+it up. When it does sweep it writes `sweep.json`, and `post.py` refuses to post
+a daily count until that file says a digest published **today** was read. A
+reset is exempt — announcing that something *has* happened is never a false
+all-clear. If the digest never arrives, the account says nothing and the
+watchdog tells you which kind of quiet it is.
+
+**Every reset gets announced.** Only the newest incident gets a reset post, so a
+sweep that added two tier 1s at once used to retire the older one into
+`known_ids` with nothing said about it. That is how 2026-09-10 (Anthropic) and
+2026-09-19 (Google DeepMind) were logged and never posted. Any resetting
+incident that is not the one being announced now threads as a reply instead, and
+the site marks a row the account never posted about as **not announced** rather
+than leaving it blank and implying coverage it did not have.
+
 **Rulings stick, subjects don't.** `declined.yaml` records candidates that were
 considered and deliberately not counted, with the reasoning and - the field that
 matters - what would reopen each one. A finding is set aside only when its

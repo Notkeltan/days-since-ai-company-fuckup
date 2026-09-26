@@ -44,6 +44,7 @@ from render_sign import CENSOR_MODES, noun_forms, render
 HERE = Path(__file__).resolve().parent
 INCIDENTS = HERE / "incidents.yaml"
 STATE = HERE / "state.json"
+SWEEP = HERE / "sweep.json"
 OUT = HERE / "out"
 
 TZ = ZoneInfo(os.environ.get("COUNTER_TZ", "Australia/Sydney"))
@@ -102,6 +103,31 @@ def days_word(n: int) -> str:
     return f"{n} day" if n == 1 else f"{n} days"
 
 
+def watched_today(today: date) -> tuple[bool, str]:
+    """Has the detector read a digest published today? (ok, why not)
+
+    The daily post is an assertion: nothing has happened since the last reset.
+    It is only worth making if somebody looked. The detector used to run before
+    AI StopWatch published, so the counter would announce an all-clear over the
+    top of a story leading the news that morning - which is the one thing an
+    account whose whole asset is being right cannot afford to do.
+
+    A reset is exempt. Announcing that something HAS happened is never a false
+    all-clear, and holding one back would be worse than posting it early.
+    """
+    try:
+        s = json.loads(SWEEP.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False, "no sweep.json: the detector has not reported in"
+    if not s.get("swept"):
+        return False, (f"the detector has not swept today "
+                       f"(newest dispatch {s.get('digest_local_date') or 'unknown'})")
+    if s.get("digest_local_date") != today.isoformat():
+        return False, (f"the last sweep read the digest for "
+                       f"{s.get('digest_local_date')}, not {today.isoformat()}")
+    return True, ""
+
+
 def reset_day(inc: Incident, state: dict) -> date:
     """The day the sign was flipped for this incident.
 
@@ -155,7 +181,8 @@ def daily_text(days: int, record: int | None, is_new_record: bool, record_from: 
     return clip(f"{head}\n\nPrevious record: {days_word(record)}.")
 
 
-def reset_text(inc: Incident, streak: int, record: int | None, today: date | None = None) -> str:
+def reset_text(inc: Incident, streak: int, record: int | None, today: date | None = None,
+               missed: Incident | None = None) -> str:
     if inc.tone == "somber":
         # No jokes, no record-keeping flourish, no image.
         return clip(f"Counter reset.\n\n{inc.company}: {inc.title}")
@@ -166,10 +193,26 @@ def reset_text(inc: Incident, streak: int, record: int | None, today: date | Non
     if today and inc.date != today:
         body += f"First disclosed {inc.date.isoformat()}. "
     body += f"Streak ended at {days_word(streak)}."
+
+    # Everything below is optional, in priority order, and only added if it
+    # fits. clip() truncates the END, so the old unconditional appends meant the
+    # record flourish could push a correction off the post and then get cut in
+    # half itself. The least important clause is the one that should be dropped.
+    extras = []
+    # The streak runs from the previous reset, announced or not. If the account
+    # missed one, the number here is smaller than the number its own sign was
+    # showing yesterday, and a reader comparing the two would be right to think
+    # something was wrong. Own it in the post rather than let them find it.
+    if missed is not None:
+        extras.append(f" {missed.company}, {missed.date.isoformat()}, was logged "
+                      f"late, so the sign had been reading high.")
     if record is not None and streak <= record:
-        body += f" Previous record stands at {days_word(record)}."
+        extras.append(f" Previous record stands at {days_word(record)}.")
     elif record is not None and streak > record:
-        body += " That was a new record."
+        extras.append(" That was a new record.")
+    for extra in extras:
+        if len(body) + len(extra) <= MAX_LEN:
+            body += extra
     return clip(body)
 
 
@@ -199,11 +242,16 @@ def reply_text(inc: Incident) -> str:
     return clip(inc.detail, MAX_LEN - len(tail)) + tail
 
 
-def mention_text(inc: Incident) -> str:
+def mention_text(inc: Incident, missed_reset: bool = False) -> str:
     link = link_for(inc)
     tail = f"\n\nMore: {link}" if link else ""
-    return clip(f"Noted but not counter-resetting (tier 2): {inc.company} — {inc.title}",
-                MAX_LEN - len(tail)) + tail
+    # A tier 1 that arrived alongside a newer one never got its own reset post,
+    # because only the latest incident is announced. Saying "tier 2" about it
+    # would be a lie, and saying nothing is how two of these went out silently.
+    lead = (f"Also counter-resetting, logged late: {inc.company} — {inc.title}"
+            if missed_reset else
+            f"Noted but not counter-resetting (tier 2): {inc.company} — {inc.title}")
+    return clip(lead, MAX_LEN - len(tail)) + tail
 
 
 # ── posting backends ─────────────────────────────────────────────────────────
@@ -394,7 +442,14 @@ def main() -> None:
     state = load_state()
 
     known_ids = set(state.get("known_ids", []))
-    new_mentions = [i for i in incidents if i.tier == 2 and i.id not in known_ids and known_ids]
+    # Tier 2s, and any resetting incident that is not the one being announced.
+    # Only `latest` gets a reset post, so when a sweep adds two tier 1s at once
+    # the older one used to go straight into known_ids with nothing said about
+    # it - which is how 2026-09-10 (Anthropic) and 2026-09-19 (Google DeepMind)
+    # were logged and never posted. They thread as replies instead.
+    new_mentions = [i for i in incidents
+                    if i.id not in known_ids and known_ids
+                    and (i.tier == 2 or (i.resets and i.id != latest.id))]
     is_reset = state.get("last_incident_id") not in (None, latest.id)
 
     # --on-new is what the push trigger uses. Any edit to incidents.yaml fires that
@@ -407,6 +462,16 @@ def main() -> None:
     if posted_today and not (a.force or (a.on_new and (is_reset or new_mentions))):
         print("already posted today; use --force to override")
         return
+
+    # A daily count says "nothing has happened". Do not say it until the
+    # detector has read a digest published today. A reset says the opposite, so
+    # it goes out regardless - as does anything the operator forced by hand.
+    if not (is_reset or new_mentions or a.force):
+        ok, why = watched_today(today)
+        if not ok:
+            print(f"not posting the daily count: {why}.")
+            print("a later run today will post it once the digest is out.")
+            return
 
     # The record line stays off until the account has watched two resets happen
     # for itself. Before that it would be quoting history it wasn't around for.
@@ -461,10 +526,19 @@ def main() -> None:
     NOUN = noun_forms(censor)[1]
     if is_reset:
         # ── RESET ──
-        prev = next(i for i in resetting if i.id == state["last_incident_id"])
+        # The reset immediately before this one, by position - NOT the one in
+        # state. state records the last reset the account announced, which is a
+        # different thing the moment a tier 1 is logged after the fact, and the
+        # site computes streaks positionally. Two numbers for one quantity is how
+        # a checkable account stops being checkable.
+        prev = resetting[-2] if len(resetting) > 1 else latest
         streak = (reset_day(latest, state) - reset_day(prev, state)).days
+        # Announced by this account, or logged quietly after the fact?
+        announced = set(state.get("resets_seen") or [])
+        missed = prev if (prev is not latest and prev.id not in announced
+                          and prev.id != state.get("last_incident_id")) else None
         prior_record = max((s[0] for s in done if s[2].id != latest.id), default=None) if show_record else None
-        text = reset_text(latest, streak, prior_record, today)
+        text = reset_text(latest, streak, prior_record, today, missed)
         img = None
         alt = ""
         if latest.tone != "somber":
@@ -508,7 +582,8 @@ def main() -> None:
 
     mention_ids: dict[str, str | None] = {}
     for m in new_mentions:
-        mention_ids[m.id] = poster.x_id(poster.post(mention_text(m), reply_to=root))
+        mention_ids[m.id] = poster.x_id(
+            poster.post(mention_text(m, missed_reset=m.resets), reply_to=root))
         if not a.dry_run and not mention_ids[m.id]:
             print(f"[warn] mention for {m.id} did not go out", file=sys.stderr)
 
