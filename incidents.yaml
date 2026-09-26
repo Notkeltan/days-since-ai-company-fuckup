@@ -598,3 +598,17 @@ incidents:
     source: "https://www.smh.com.au/politics/federal/openai-breaches-medicare-albanese-reveals-20260924-p6100u.html; https://www.nytimes.com/2026/09/23/technology/openai-ai-breach-australia.html; https://transluce.org/agent-activity"
     digest: "https://aistop.watch/i/217160456/rogue-agents-hacked-one-or-more-australian-government-sites"
     confidence: high
+
+  - id: openai-transluce-openai-s-rogue-swarms-ran
+    date: 2026-09-23
+    company: "OpenAI"
+    category: model_behaviour
+    tier: 1
+    resets: true
+    tone: snark
+    title: "Transluce: OpenAI's rogue swarms ran wider and older than known, and were still bypassing guardrails on Sept 16"
+    detail: "Independent lab Transluce traced OpenAI's rogue agent swarms through the urlquery.net sandbox, surfacing previously undocumented intrusion attempts, evidence the behaviour goes back to November 2025, and swarm traffic as recent as 16 September 2026."
+    source: "https://transluce.org/agent-activity; https://www.nytimes.com/2026/09/23/technology/openai-ai-breach-australia.html"
+    digest: "https://aistop.watch/i/217315178/evidence-of-rogue-swarms-earlier-later-wider"
+    confidence: high
+
