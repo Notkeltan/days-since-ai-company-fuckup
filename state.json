@@ -1,5 +1,5 @@
 {
-  "last_incident_id": "openai-openai-s-rogue-agents-breached",
+  "last_incident_id": "openai-transluce-openai-s-rogue-swarms-ran",
   "last_post_date": "2026-09-26",
   "known_ids": [
     "anthropic-anthropic-admits-its-hacking-models",
@@ -46,6 +46,7 @@
     "openai-sky-voice",
     "openai-superalignment-collapse",
     "openai-three-researchers-chained-an-sso-flaw",
+    "openai-transluce-openai-s-rogue-swarms-ran",
     "raine-v-openai"
   ],
   "resets_seen": [
@@ -53,7 +54,8 @@
     "openai-dsewiki-agent-message-board",
     "anthropic-claude-code-helped-a-yemeni-group",
     "openai-openai-confirms-its-rogue-agents-were",
-    "openai-openai-s-rogue-agents-breached"
+    "openai-openai-s-rogue-agents-breached",
+    "openai-transluce-openai-s-rogue-swarms-ran"
   ],
   "record_announced_for": null,
   "posts": {
@@ -213,9 +215,10 @@
         "reply": "2103273591299100767"
       },
       "2026-09-26": {
-        "kind": "daily",
-        "id": "2103654001824661526",
-        "incident": "openai-openai-s-rogue-agents-breached"
+        "kind": "reset",
+        "id": "2103754958231454154",
+        "incident": "openai-transluce-openai-s-rogue-swarms-ran",
+        "reply": "2103754963767918757"
       }
     },
     "by_incident": {
@@ -258,12 +261,18 @@
         "kind": "mention",
         "id": "2103654005616284051",
         "date": "2026-09-26"
+      },
+      "openai-transluce-openai-s-rogue-swarms-ran": {
+        "kind": "reset",
+        "id": "2103754958231454154",
+        "date": "2026-09-26"
       }
     }
   },
   "reset_on": {
     "anthropic-claude-code-helped-a-yemeni-group": "2026-09-12",
     "openai-openai-confirms-its-rogue-agents-were": "2026-09-14",
-    "openai-openai-s-rogue-agents-breached": "2026-09-25"
+    "openai-openai-s-rogue-agents-breached": "2026-09-25",
+    "openai-transluce-openai-s-rogue-swarms-ran": "2026-09-26"
   }
 }
