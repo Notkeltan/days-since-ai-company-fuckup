@@ -37,6 +37,19 @@ SITE = HERE / "site"
 STATE = HERE / "state.json"
 # Explicit constants, not derived. min(by_date) would report the account as
 # having started on the day URL capture started, which is three days late.
+# The day the project stopped. Set this and the site freezes honestly: the
+# number is the final one rather than a live count, the page says so, and every
+# data file carries status "stopped" so a scraper is not left inferring that
+# silence means nothing has happened. Empty string = still running.
+#
+# Leaving a "days since" counter live after the automation is switched off would
+# be the worst version of the bug this project spent a month fixing: a confident
+# all-clear that nobody is checking.
+STOPPED_ON = "2026-09-28"
+STOPPED_WHY = ("AI StopWatch, the single source this counter read, is winding down, "
+               "and the running costs stopped being worth it. The archive below is "
+               "complete and stays up.")
+
 POSTING_SINCE = "2026-08-27"    # first day the account posted at all
 CAPTURE_SINCE = "2026-08-27"    # capture is automatic from 2026-09-03; earlier days were backfilled from the public timeline
 REPO = "https://github.com/Notkeltan/days-since-ai-company-fuckup"
@@ -253,6 +266,11 @@ def load(today: date) -> dict:
         "schema": SCHEMA,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "as_of": today.isoformat(),
+        # Scrapers need to know that silence here means "switched off", not
+        # "nothing has happened". Those are opposite claims.
+        "status": "stopped" if STOPPED_ON else "live",
+        "stopped_on": STOPPED_ON or None,
+        "stopped_why": STOPPED_WHY if STOPPED_ON else None,
         "days_since_last_reset": days,
         "last_reset": latest,
         "longest_streak": record,
@@ -414,6 +432,8 @@ def page(d: dict) -> str:
   /* A row the account logged but never posted about. Quiet, but present:
      leaving it blank would read as coverage the account did not have. */
   .unposted {{ font-size:.85em; opacity:.6; white-space:nowrap; }}
+  .stopped {{ border:3px solid var(--red); background:#fff; padding:.9em 1.1em;
+              margin:1.2em 0; font-size:1.05rem; line-height:1.5; }}
   .count {{ font-family:Anton,Impact,sans-serif; font-size:clamp(5rem,22vw,12rem);
             color:var(--red); line-height:.9; text-align:center;
             border:8px solid var(--red); background:#fff; padding:.1em .25em;
@@ -434,19 +454,27 @@ def page(d: dict) -> str:
 <main>
   <p class="sub">This industry has gone</p>
   <span class="count">{d["days_since_last_reset"]}</span>
-  <p class="sub">days since the last major AI company f**kup</p>
+  <p class="sub">days since the last major AI company f**kup{
+      f" — final count, {e(STOPPED_ON)}" if STOPPED_ON else ""}</p>
+
+  {f'''<p class="stopped"><strong>This counter has stopped.</strong> It last updated on
+     {e(STOPPED_ON)} and the number above is frozen, not current. {e(STOPPED_WHY)}</p>''' if STOPPED_ON else ""}
 
   <h1>Days since the last major AI company f**kup</h1>
   <p>One number, once a day, on <a href="https://x.com/{e(HANDLE.lstrip("@"))}">{e(HANDLE)}</a>.
-     It resets when a frontier AI company does something it has to apologise for.
-     Every entry has a primary source before it posts.</p>
+     It {"reset" if STOPPED_ON else "resets"} when a frontier AI company {"did" if STOPPED_ON else "does"}
+     something it {"had" if STOPPED_ON else "has"} to apologise for.
+     Every entry {"had" if STOPPED_ON else "has"} a primary source before it {"posted" if STOPPED_ON else "posts"}.</p>
 
   <p><strong>Last reset:</strong> {e(latest["date"])} &middot; {e(latest["company"])} &mdash;
      {e(latest["title"])}</p>
   {f'<p><strong>Longest streak on record:</strong> {rec["days"]} days ({e(rec["from"])} to {e(rec["to"])}).</p>' if rec else ""}
 
   <h2>Take the data</h2>
-  <p>It is CC BY-SA 3.0. Scrape it, embed it, argue with it. Updated once a day, and the
+  <p>It is CC BY-SA 3.0. Scrape it, embed it, argue with it. {
+     "Complete and final: every file carries <code>status: stopped</code> so you "
+     "can tell a switched-off counter from a quiet one. The" if STOPPED_ON else
+     "Updated once a day, and the"}
      files are static with permissive CORS, so you can fetch them straight from a
      browser.</p>
   <div class="wrap"><table>
@@ -602,6 +630,10 @@ def main() -> None:
     ap.add_argument("--today", help="override today's date (yyyy-mm-dd)")
     a = ap.parse_args()
     today = date.fromisoformat(a.today) if a.today else datetime.now().date()
+    if STOPPED_ON and not a.today:
+        # Frozen, not merely stale. A rebuild months from now must produce the
+        # same final number, not a larger one implying the count kept running.
+        today = date.fromisoformat(STOPPED_ON)
 
     d = load(today)
     SITE.mkdir(exist_ok=True)
@@ -613,6 +645,9 @@ def main() -> None:
         "schema": SCHEMA,
         "generated_at": d["generated_at"],
         "as_of": d["as_of"],
+        "status": d["status"],
+        "stopped_on": d["stopped_on"],
+        "stopped_why": d["stopped_why"],
         "days_since_last_reset": d["days_since_last_reset"],
         "last_reset": {k: d["last_reset"][k] for k in ("id", "date", "company", "title")},
         "source_repo": REPO,
