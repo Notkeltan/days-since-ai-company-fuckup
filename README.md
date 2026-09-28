@@ -1,5 +1,19 @@
 # Days Since The Last Major AI Company F**kup
 
+> **Stopped 2026-09-28.** Every workflow is disabled and the account no longer
+> posts. AI StopWatch, the single source the detector read, is winding down, and
+> the running costs stopped being worth it. It ran for 33 days, posted 33 times,
+> and reset 6 times.
+>
+> **The archive stays up and stays complete**, at
+> <https://dayssince.keltan.net> and in this repo, CC BY-SA 3.0. Every data file
+> carries `status: "stopped"` so a scraper can tell a switched-off counter from
+> a quiet one. The site's number is frozen at its final value, not a live count.
+>
+> To restart it: `gh workflow enable daily.yml detect.yml watchdog.yml pages.yml`,
+> clear `STOPPED_ON` in [build_site.py](build_site.py), and point `DIGEST_FEED`
+> at a source that still publishes. Everything below describes how it worked.
+
 An automated account that posts one number a day, on a workplace-safety sign, and resets it every time a frontier AI company does something they have to apologise for.
 
 The joke is that the number is almost always small. The horror is that it's accurate.

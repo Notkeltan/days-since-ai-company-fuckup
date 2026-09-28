@@ -1,8 +1,20 @@
-name: Log an incident
-description: Add an entry to incidents.yaml from your phone. Tier 1 resets the counter and posts within minutes.
+name: Log an incident (project stopped)
+description: The counter stopped on 2026-09-28. This form no longer does anything automatically.
 title: "[incident] "
 labels: ["incident"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ### This project stopped on 2026-09-28.
+
+        The workflow that read this form is disabled, so submitting it will
+        **not** add an entry or post anything. The archive at
+        <https://dayssince.keltan.net> is complete and stays up.
+
+        You are welcome to open an issue anyway if you have a correction to the
+        existing record — that is worth having — but nothing here is automated
+        any more.
   - type: input
     id: date
     attributes:

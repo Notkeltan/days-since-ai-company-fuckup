@@ -1,3 +1,7 @@
+# STOPPED 2026-09-28. This workflow is disabled in GitHub Actions settings;
+# the schedule below is kept only so the project can be restarted with
+# `gh workflow enable <file>` rather than rebuilt. Nothing here runs.
+#
 name: issue to incident
 
 # The "Log an incident" issue form is the phone-friendly way in. Opening one
